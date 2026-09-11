@@ -19,21 +19,14 @@ public class Behavior {
     /** Unit for numeric records (e.g., "ml", "km"). Null for boolean type. */
     private String unit;
 
-    /** Icon resource name (Material icon identifier). */
-    private String iconName;
-
     /** Color hex string for the behavior card. */
     private String color;
 
     /** Timestamp when this behavior was created. */
     private long createdAt;
 
-    /** Whether this behavior is archived (soft delete). */
-    private boolean archived;
-
     public Behavior() {
         this.createdAt = System.currentTimeMillis();
-        this.archived = false;
     }
 
     // Getters and Setters
@@ -70,14 +63,6 @@ public class Behavior {
         this.unit = unit;
     }
 
-    public String getIconName() {
-        return iconName;
-    }
-
-    public void setIconName(String iconName) {
-        this.iconName = iconName;
-    }
-
     public String getColor() {
         return color;
     }
@@ -94,11 +79,4 @@ public class Behavior {
         this.createdAt = createdAt;
     }
 
-    public boolean isArchived() {
-        return archived;
-    }
-
-    public void setArchived(boolean archived) {
-        this.archived = archived;
-    }
 }

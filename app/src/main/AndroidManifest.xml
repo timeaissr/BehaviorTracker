@@ -2,19 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Notifications (Android 13+ requires runtime permission) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- Exact Alarms for fixed-time reminders -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-
-    <!-- Boot receiver to re-schedule alarms after reboot -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-    <!-- Vibrate for notifications -->
-    <uses-permission android:name="android.permission.VIBRATE" />
-
     <application
         android:name=".BehaviorTrackerApp"
         android:allowBackup="true"
@@ -50,20 +37,6 @@
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:parentActivityName=".ui.main.MainActivity" />
-
-        <!-- Alarm Receiver for Reminders -->
-        <receiver
-            android:name=".notification.ReminderReceiver"
-            android:exported="false" />
-
-        <!-- Boot Receiver to reschedule alarms -->
-        <receiver
-            android:name=".notification.BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
 
     </application>
 

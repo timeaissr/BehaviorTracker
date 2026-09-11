@@ -7,7 +7,9 @@ import android.view.View;
 import android.widget.EditText;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -67,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
     }
 
     private void observeData() {
-        viewModel.getAllActiveBehaviors().observe(this, behaviors -> {
+        viewModel.getAllBehaviors().observe(this, behaviors -> {
             if (behaviors == null || behaviors.isEmpty()) {
                 binding.layoutEmpty.setVisibility(View.VISIBLE);
                 binding.recyclerBehaviors.setVisibility(View.GONE);
@@ -111,10 +113,13 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
                 .setTitle(behavior.getName())
                 .setView(dialogView)
                 .setPositiveButton(R.string.confirm, (dialog, which) -> {
-                    viewModel.quickLogBoolean(behavior.getId(), selectedTimestamp[0]);
-                    Snackbar.make(binding.getRoot(),
-                            behavior.getName() + " - " + getString(R.string.logged_today),
-                            Snackbar.LENGTH_SHORT).show();
+                    viewModel.quickLogBoolean(behavior.getId(), selectedTimestamp[0], inserted ->
+                            runOnUiThread(() -> Snackbar.make(binding.getRoot(),
+                                    inserted
+                                            ? behavior.getName() + " - "
+                                                    + getString(R.string.logged_today)
+                                            : getString(R.string.record_exists_for_day),
+                                    Snackbar.LENGTH_SHORT).show()));
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
@@ -132,27 +137,35 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
         
         btnPickDatetime.setOnClickListener(v -> showDateTimePicker(selectedTimestamp, btnPickDatetime));
 
-        new MaterialAlertDialogBuilder(this)
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(behavior.getName() + unit)
                 .setView(dialogView)
-                .setPositiveButton(R.string.confirm, (dialog, which) -> {
-                    String valueStr = editValue.getText().toString().trim();
-                    if (!valueStr.isEmpty()) {
-                        try {
-                            double value = Double.parseDouble(valueStr);
-                            String note = editNote.getText().toString().trim();
-                            viewModel.quickLogNumeric(behavior.getId(), value,
-                                    note.isEmpty() ? null : note, selectedTimestamp[0]);
-                            Snackbar.make(binding.getRoot(),
-                                    behavior.getName() + " - " + getString(R.string.logged_today),
-                                    Snackbar.LENGTH_SHORT).show();
-                        } catch (NumberFormatException e) {
-                            // Ignore invalid input
-                        }
-                    }
-                })
+                .setPositiveButton(R.string.confirm, null)
                 .setNegativeButton(R.string.cancel, null)
-                .show();
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> {
+                    String valueStr = editValue.getText().toString().trim();
+                    double value;
+                    try {
+                        value = Double.parseDouble(valueStr);
+                    } catch (NumberFormatException e) {
+                        editValue.setError(getString(R.string.error_invalid_value));
+                        return;
+                    }
+                    if (!Double.isFinite(value)) {
+                        editValue.setError(getString(R.string.error_invalid_value));
+                        return;
+                    }
+                    String note = editNote.getText().toString().trim();
+                    viewModel.quickLogNumeric(behavior.getId(), value,
+                            note.isEmpty() ? null : note, selectedTimestamp[0]);
+                    Snackbar.make(binding.getRoot(),
+                            behavior.getName() + " - " + getString(R.string.record_added),
+                            Snackbar.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }));
+        dialog.show();
     }
 
     private void showDateTimePicker(final long[] timestampHolder, MaterialButton button) {
@@ -164,8 +177,13 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
             // After date is selected, show time picker
+            Calendar selectedDateUtc = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            selectedDateUtc.setTimeInMillis(selection);
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(selection);
+            calendar.setTimeInMillis(timestampHolder[0]);
+            calendar.set(Calendar.YEAR, selectedDateUtc.get(Calendar.YEAR));
+            calendar.set(Calendar.MONTH, selectedDateUtc.get(Calendar.MONTH));
+            calendar.set(Calendar.DAY_OF_MONTH, selectedDateUtc.get(Calendar.DAY_OF_MONTH));
             
             MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
                     .setTimeFormat(TimeFormat.CLOCK_24H)

@@ -16,16 +16,16 @@ import java.util.List;
 public class MainViewModel extends AndroidViewModel {
 
     private final BehaviorRepository repository;
-    private final LiveData<List<Behavior>> allActiveBehaviors;
+    private final LiveData<List<Behavior>> allBehaviors;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
         repository = new BehaviorRepository(application);
-        allActiveBehaviors = repository.getAllActiveBehaviors();
+        allBehaviors = repository.getAllBehaviors();
     }
 
-    public LiveData<List<Behavior>> getAllActiveBehaviors() {
-        return allActiveBehaviors;
+    public LiveData<List<Behavior>> getAllBehaviors() {
+        return allBehaviors;
     }
 
     public LiveData<Integer> getRecordCountForDay(long behaviorId, long dayStart, long dayEnd) {
@@ -38,16 +38,21 @@ public class MainViewModel extends AndroidViewModel {
 
     /** Quick-log a boolean behavior (just inserts a record with value 1). */
     public void quickLogBoolean(long behaviorId) {
-        quickLogBoolean(behaviorId, System.currentTimeMillis());
+        quickLogBoolean(behaviorId, System.currentTimeMillis(), null);
     }
 
     /** Quick-log a boolean behavior with custom timestamp. */
     public void quickLogBoolean(long behaviorId, long timestamp) {
+        quickLogBoolean(behaviorId, timestamp, null);
+    }
+
+    public void quickLogBoolean(long behaviorId, long timestamp,
+                                BehaviorRepository.OnBooleanInsertCallback callback) {
         Record record = new Record();
         record.setBehaviorId(behaviorId);
         record.setValue(1.0);
         record.setTimestamp(timestamp);
-        repository.insertRecord(record);
+        repository.insertBooleanRecordIfAbsent(record, callback);
     }
 
     /** Quick-log a numeric behavior with a given value and optional note. */
@@ -57,6 +62,9 @@ public class MainViewModel extends AndroidViewModel {
 
     /** Quick-log a numeric behavior with custom timestamp. */
     public void quickLogNumeric(long behaviorId, double value, String note, long timestamp) {
+        if (!Double.isFinite(value)) {
+            return;
+        }
         Record record = new Record();
         record.setBehaviorId(behaviorId);
         record.setValue(value);
@@ -65,7 +73,8 @@ public class MainViewModel extends AndroidViewModel {
         repository.insertRecord(record);
     }
 
-    public BehaviorRepository getRepository() {
-        return repository;
+    @Override
+    protected void onCleared() {
+        repository.shutdown();
     }
 }

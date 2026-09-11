@@ -3,11 +3,11 @@ package com.github.timeaissr.behaviortracker.ui.detail;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class BehaviorDetailActivity extends AppCompatActivity {
 
@@ -42,6 +43,9 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     private ActivityBehaviorDetailBinding binding;
     private DetailViewModel viewModel;
     private RecordAdapter recordAdapter;
+    private LiveData<List<Record>> recordsSource;
+    private LiveData<List<Record>> chartSource;
+    private LiveData<DetailViewModel.StatsData> statsSource;
 
     private long behaviorId;
     private Behavior currentBehavior;
@@ -122,17 +126,26 @@ public class BehaviorDetailActivity extends AppCompatActivity {
         
         btnPickDatetime.setOnClickListener(v -> showDateTimePicker(selectedTimestamp, btnPickDatetime));
 
-        new MaterialAlertDialogBuilder(this)
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(currentBehavior.getName())
                 .setView(dialogView)
-                .setPositiveButton(R.string.confirm, (dialog, which) -> {
-                    viewModel.insertRecord(behaviorId, 1.0, null, selectedTimestamp[0]);
-                    com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
-                            currentBehavior.getName() + " - 记录已添加",
-                            com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
-                })
+                .setPositiveButton(R.string.confirm, null)
                 .setNegativeButton(R.string.cancel, null)
-                .show();
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> viewModel.insertBooleanRecord(
+                        behaviorId, selectedTimestamp[0], inserted -> runOnUiThread(() -> {
+                            com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
+                                    inserted
+                                            ? currentBehavior.getName() + " - "
+                                                    + getString(R.string.record_added)
+                                            : getString(R.string.record_exists_for_day),
+                                    com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
+                            if (inserted) {
+                                dialog.dismiss();
+                            }
+                        }))));
+        dialog.show();
     }
 
     private void showNumericRecordDialog() {
@@ -148,27 +161,35 @@ public class BehaviorDetailActivity extends AppCompatActivity {
         
         btnPickDatetime.setOnClickListener(v -> showDateTimePicker(selectedTimestamp, btnPickDatetime));
 
-        new MaterialAlertDialogBuilder(this)
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(currentBehavior.getName() + unit)
                 .setView(dialogView)
-                .setPositiveButton(R.string.confirm, (dialog, which) -> {
-                    String valueStr = editValue.getText().toString().trim();
-                    if (!valueStr.isEmpty()) {
-                        try {
-                            double value = Double.parseDouble(valueStr);
-                            String note = editNote.getText().toString().trim();
-                            viewModel.insertRecord(behaviorId, value, 
-                                    note.isEmpty() ? null : note, selectedTimestamp[0]);
-                            com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
-                                    currentBehavior.getName() + " - 记录已添加",
-                                    com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
-                        } catch (NumberFormatException e) {
-                            // Ignore invalid input
-                        }
-                    }
-                })
+                .setPositiveButton(R.string.confirm, null)
                 .setNegativeButton(R.string.cancel, null)
-                .show();
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> {
+                    String valueStr = editValue.getText().toString().trim();
+                    double value;
+                    try {
+                        value = Double.parseDouble(valueStr);
+                    } catch (NumberFormatException e) {
+                        editValue.setError(getString(R.string.error_invalid_value));
+                        return;
+                    }
+                    if (!Double.isFinite(value)) {
+                        editValue.setError(getString(R.string.error_invalid_value));
+                        return;
+                    }
+                    String note = editNote.getText().toString().trim();
+                    viewModel.insertNumericRecord(behaviorId, value,
+                            note.isEmpty() ? null : note, selectedTimestamp[0]);
+                    com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
+                            currentBehavior.getName() + " - " + getString(R.string.record_added),
+                            com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }));
+        dialog.show();
     }
 
     private void showDateTimePicker(final long[] timestampHolder, 
@@ -182,8 +203,15 @@ public class BehaviorDetailActivity extends AppCompatActivity {
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
             // After date is selected, show time picker
+            java.util.Calendar selectedDateUtc = java.util.Calendar.getInstance(
+                    TimeZone.getTimeZone("UTC"));
+            selectedDateUtc.setTimeInMillis(selection);
             java.util.Calendar calendar = java.util.Calendar.getInstance();
-            calendar.setTimeInMillis(selection);
+            calendar.setTimeInMillis(timestampHolder[0]);
+            calendar.set(java.util.Calendar.YEAR, selectedDateUtc.get(java.util.Calendar.YEAR));
+            calendar.set(java.util.Calendar.MONTH, selectedDateUtc.get(java.util.Calendar.MONTH));
+            calendar.set(java.util.Calendar.DAY_OF_MONTH,
+                    selectedDateUtc.get(java.util.Calendar.DAY_OF_MONTH));
             
             com.google.android.material.timepicker.MaterialTimePicker timePicker = 
                     new com.google.android.material.timepicker.MaterialTimePicker.Builder()
@@ -234,10 +262,15 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                 record -> showDeleteRecordDialog(record));
         binding.recyclerHistory.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerHistory.setAdapter(recordAdapter);
+        if (recordsSource != null && recordsSource.getValue() != null) {
+            recordAdapter.submitList(recordsSource.getValue());
+        }
     }
 
     private void observeRecords() {
-        viewModel.getRecords(behaviorId).observe(this, records -> {
+        if (recordsSource != null) return;
+        recordsSource = viewModel.getRecords(behaviorId);
+        recordsSource.observe(this, records -> {
             if (recordAdapter != null) {
                 recordAdapter.submitList(records);
             }
@@ -245,8 +278,10 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     }
 
     private void loadStats(Behavior behavior) {
+        if (statsSource != null) return;
         boolean isBoolean = behavior.getRecordType() == RecordType.BOOLEAN;
-        viewModel.calculateStats(behaviorId, isBoolean).observe(this, stats -> {
+        statsSource = viewModel.calculateStats(behaviorId, isBoolean);
+        statsSource.observe(this, stats -> {
             if (isBoolean) {
                 binding.textStatValue1.setText(String.valueOf(stats.currentStreak));
                 binding.textStatLabel1.setText(getString(R.string.current_streak));
@@ -271,14 +306,19 @@ public class BehaviorDetailActivity extends AppCompatActivity {
         long endTime = DateUtils.getEndOfDay();
         long startTime = DateUtils.getStartOfDaysAgo(selectedDays - 1);
 
-        viewModel.getRecordsInRange(behaviorId, startTime, endTime).observe(this, records -> {
+        if (chartSource != null) {
+            chartSource.removeObservers(this);
+        }
+        chartSource = viewModel.getRecordsInRange(behaviorId, startTime, endTime);
+        final int daysForSource = selectedDays;
+        chartSource.observe(this, records -> {
             if (records == null) return;
             binding.chartContainer.removeAllViews();
 
             if (currentBehavior.getRecordType() == RecordType.BOOLEAN) {
-                createBarChart(records, selectedDays);
+                createBarChart(records, daysForSource);
             } else {
-                createLineChart(records, selectedDays);
+                createLineChart(records, daysForSource);
             }
         });
     }
@@ -397,7 +437,7 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     private void showDeleteRecordDialog(Record record) {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.delete)
-                .setMessage("确定要删除这条记录吗？")
+                .setMessage(R.string.delete_record_confirm)
                 .setPositiveButton(R.string.delete, (dialog, which) ->
                         viewModel.deleteRecord(record))
                 .setNegativeButton(R.string.cancel, null)

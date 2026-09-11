@@ -12,6 +12,7 @@
     <string name="quick_log">快速记录</string>
     <string name="logged_today">今日已记录</string>
     <string name="not_logged_today">今日未记录</string>
+    <string name="today_value">今日：%1$.1f %2$s</string>
 
     <!-- Add/Edit Behavior -->
     <string name="edit_behavior">编辑行为</string>
@@ -23,7 +24,6 @@
     <string name="unit_label">单位</string>
     <string name="unit_hint">例如：ml、km、分钟</string>
     <string name="choose_color">选择颜色</string>
-    <string name="choose_icon">选择图标</string>
     <string name="save">保存</string>
     <string name="cancel">取消</string>
     <string name="delete">删除</string>
@@ -33,21 +33,6 @@
     <string name="input_value">输入数值</string>
     <string name="record_note">备注（可选）</string>
     <string name="confirm">确认</string>
-
-    <!-- Reminder -->
-    <string name="reminder">提醒</string>
-    <string name="enable_reminder">开启提醒</string>
-    <string name="reminder_type">提醒方式</string>
-    <string name="reminder_fixed_time">每天固定时间</string>
-    <string name="reminder_interval">间隔提醒</string>
-    <string name="reminder_time">提醒时间</string>
-    <string name="reminder_start_time">开始时间</string>
-    <string name="reminder_end_time">结束时间</string>
-    <string name="reminder_interval_label">提醒间隔</string>
-    <string name="reminder_interval_hours">小时</string>
-    <string name="reminder_interval_minutes">分钟</string>
-    <string name="reminder_notification_title">行为提醒</string>
-    <string name="reminder_notification_text">该记录「%s」了</string>
 
     <!-- Detail / Stats -->
     <string name="history">历史记录</string>
@@ -66,6 +51,7 @@
     <string name="export_data">导出数据</string>
     <string name="import_data">导入数据</string>
     <string name="export_success">数据导出成功</string>
+    <string name="export_error">数据导出失败</string>
     <string name="import_success">数据导入成功</string>
     <string name="import_error">导入失败：文件格式错误</string>
     <string name="theme_settings">主题设置</string>
@@ -83,4 +69,9 @@
     <string name="ok">确定</string>
     <string name="error_empty_name">行为名称不能为空</string>
     <string name="error_empty_unit">数值记录需要填写单位</string>
+    <string name="error_invalid_value">请输入有效数值</string>
+    <string name="save_error">保存失败，请重试</string>
+    <string name="record_added">记录已添加</string>
+    <string name="record_exists_for_day">该日已有打卡记录</string>
+    <string name="delete_record_confirm">确定要删除这条记录吗？</string>
 </resources>
