@@ -64,12 +64,12 @@ public class DetailViewModel extends AndroidViewModel {
     }
 
     public void insertBooleanRecord(long behaviorId, long timestamp,
-                                    BehaviorRepository.OnBooleanInsertCallback callback) {
+                                    BehaviorRepository.OnOperationCallback callback) {
         Record record = new Record();
         record.setBehaviorId(behaviorId);
         record.setValue(1.0);
         record.setTimestamp(timestamp);
-        repository.insertBooleanRecordIfAbsent(record, callback);
+        repository.insertRecord(record, callback);
     }
 
     public void insertNumericRecord(long behaviorId, double value, String note, long timestamp) {

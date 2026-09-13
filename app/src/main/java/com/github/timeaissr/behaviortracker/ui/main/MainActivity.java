@@ -113,12 +113,12 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
                 .setTitle(behavior.getName())
                 .setView(dialogView)
                 .setPositiveButton(R.string.confirm, (dialog, which) -> {
-                    viewModel.quickLogBoolean(behavior.getId(), selectedTimestamp[0], inserted ->
+                    viewModel.quickLogBoolean(behavior.getId(), selectedTimestamp[0], success ->
                             runOnUiThread(() -> Snackbar.make(binding.getRoot(),
-                                    inserted
+                                    success
                                             ? behavior.getName() + " - "
-                                                    + getString(R.string.logged_today)
-                                            : getString(R.string.record_exists_for_day),
+                                                    + getString(R.string.record_added)
+                                            : getString(R.string.save_error),
                                     Snackbar.LENGTH_SHORT).show()));
                 })
                 .setNegativeButton(R.string.cancel, null)

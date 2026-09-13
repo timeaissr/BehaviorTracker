@@ -35,10 +35,6 @@ public interface RecordDao {
     @Query("SELECT COUNT(*) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :dayStart AND :dayEnd")
     LiveData<Integer> getRecordCountForDay(long behaviorId, long dayStart, long dayEnd);
 
-    /** Synchronous: count records for a day. */
-    @Query("SELECT COUNT(*) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :dayStart AND :dayEnd")
-    int getRecordCountForDaySync(long behaviorId, long dayStart, long dayEnd);
-
     /** Get sum of values for a behavior within a time range (for numeric stats). */
     @Query("SELECT COALESCE(SUM(value), 0) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :startTime AND :endTime")
     LiveData<Double> getSumInRange(long behaviorId, long startTime, long endTime);

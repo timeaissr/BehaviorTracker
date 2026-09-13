@@ -47,12 +47,12 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void quickLogBoolean(long behaviorId, long timestamp,
-                                BehaviorRepository.OnBooleanInsertCallback callback) {
+                                BehaviorRepository.OnOperationCallback callback) {
         Record record = new Record();
         record.setBehaviorId(behaviorId);
         record.setValue(1.0);
         record.setTimestamp(timestamp);
-        repository.insertBooleanRecordIfAbsent(record, callback);
+        repository.insertRecord(record, callback);
     }
 
     /** Quick-log a numeric behavior with a given value and optional note. */

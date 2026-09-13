@@ -72,6 +72,5 @@
     <string name="error_invalid_value">请输入有效数值</string>
     <string name="save_error">保存失败，请重试</string>
     <string name="record_added">记录已添加</string>
-    <string name="record_exists_for_day">该日已有打卡记录</string>
     <string name="delete_record_confirm">确定要删除这条记录吗？</string>
 </resources>

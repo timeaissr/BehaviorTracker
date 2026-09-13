@@ -134,14 +134,14 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                 .create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 .setOnClickListener(v -> viewModel.insertBooleanRecord(
-                        behaviorId, selectedTimestamp[0], inserted -> runOnUiThread(() -> {
+                        behaviorId, selectedTimestamp[0], success -> runOnUiThread(() -> {
                             com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
-                                    inserted
+                                    success
                                             ? currentBehavior.getName() + " - "
                                                     + getString(R.string.record_added)
-                                            : getString(R.string.record_exists_for_day),
+                                            : getString(R.string.save_error),
                                     com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
-                            if (inserted) {
+                            if (success) {
                                 dialog.dismiss();
                             }
                         }))));

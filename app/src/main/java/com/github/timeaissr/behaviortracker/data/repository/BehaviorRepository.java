@@ -20,13 +20,12 @@ import java.util.concurrent.Executors;
  */
 public class BehaviorRepository {
 
-    private final AppDatabase db;
     private final BehaviorDao behaviorDao;
     private final RecordDao recordDao;
     private final ExecutorService executor;
 
     public BehaviorRepository(Application application) {
-        db = AppDatabase.getInstance(application);
+        AppDatabase db = AppDatabase.getInstance(application);
         behaviorDao = db.behaviorDao();
         recordDao = db.recordDao();
         executor = Executors.newSingleThreadExecutor();
@@ -114,29 +113,20 @@ public class BehaviorRepository {
     }
 
     public void insertRecord(Record record) {
-        executor.execute(() -> recordDao.insert(record));
+        insertRecord(record, null);
     }
 
-    public void insertBooleanRecordIfAbsent(Record record, OnBooleanInsertCallback callback) {
+    public void insertRecord(Record record, OnOperationCallback callback) {
         executor.execute(() -> {
-            long dayStart = com.github.timeaissr.behaviortracker.util.DateUtils
-                    .getStartOfDay(record.getTimestamp());
-            long dayEnd = com.github.timeaissr.behaviortracker.util.DateUtils
-                    .getEndOfDay(record.getTimestamp());
-            final boolean[] inserted = {false};
+            boolean success = false;
             try {
-                db.runInTransaction(() -> {
-                    if (recordDao.getRecordCountForDaySync(
-                            record.getBehaviorId(), dayStart, dayEnd) == 0) {
-                        recordDao.insert(record);
-                        inserted[0] = true;
-                    }
-                });
+                recordDao.insert(record);
+                success = true;
             } catch (RuntimeException ignored) {
-                // Treat database failures as an unsuccessful insert.
+                // Report failure through the callback.
             }
             if (callback != null) {
-                callback.onComplete(inserted[0]);
+                callback.onComplete(success);
             }
         });
     }
@@ -156,10 +146,6 @@ public class BehaviorRepository {
     // Callback interface
     public interface OnInsertCallback {
         void onInserted(long id);
-    }
-
-    public interface OnBooleanInsertCallback {
-        void onComplete(boolean inserted);
     }
 
     public interface OnOperationCallback {
