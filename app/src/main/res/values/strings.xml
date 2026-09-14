@@ -71,6 +71,7 @@
     <string name="error_empty_unit">数值记录需要填写单位</string>
     <string name="error_invalid_value">请输入有效数值</string>
     <string name="save_error">保存失败，请重试</string>
+    <string name="delete_error">删除失败，请重试</string>
     <string name="record_added">记录已添加</string>
     <string name="delete_record_confirm">确定要删除这条记录吗？</string>
 </resources>

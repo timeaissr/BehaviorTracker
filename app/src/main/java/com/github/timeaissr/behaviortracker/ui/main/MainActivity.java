@@ -114,12 +114,15 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
                 .setView(dialogView)
                 .setPositiveButton(R.string.confirm, (dialog, which) -> {
                     viewModel.quickLogBoolean(behavior.getId(), selectedTimestamp[0], success ->
-                            runOnUiThread(() -> Snackbar.make(binding.getRoot(),
-                                    success
-                                            ? behavior.getName() + " - "
-                                                    + getString(R.string.record_added)
-                                            : getString(R.string.save_error),
-                                    Snackbar.LENGTH_SHORT).show()));
+                            runOnUiThread(() -> {
+                                if (!canHandleAsyncResult()) return;
+                                Snackbar.make(binding.getRoot(),
+                                        success
+                                                ? behavior.getName() + " - "
+                                                        + getString(R.string.record_added)
+                                                : getString(R.string.save_error),
+                                        Snackbar.LENGTH_SHORT).show();
+                            }));
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
@@ -158,12 +161,24 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
                         return;
                     }
                     String note = editNote.getText().toString().trim();
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     viewModel.quickLogNumeric(behavior.getId(), value,
-                            note.isEmpty() ? null : note, selectedTimestamp[0]);
-                    Snackbar.make(binding.getRoot(),
-                            behavior.getName() + " - " + getString(R.string.record_added),
-                            Snackbar.LENGTH_SHORT).show();
-                    dialog.dismiss();
+                            note.isEmpty() ? null : note, selectedTimestamp[0], success ->
+                                    runOnUiThread(() -> {
+                                        if (!canHandleAsyncResult()) return;
+                                        Snackbar.make(binding.getRoot(),
+                                                success
+                                                        ? behavior.getName() + " - "
+                                                                + getString(R.string.record_added)
+                                                        : getString(R.string.save_error),
+                                                Snackbar.LENGTH_SHORT).show();
+                                        if (success) {
+                                            dialog.dismiss();
+                                        } else {
+                                            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                                                    .setEnabled(true);
+                                        }
+                                    }));
                 }));
         dialog.show();
     }
@@ -172,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
         // Show date picker first
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("选择日期")
-                .setSelection(timestampHolder[0])
+                .setSelection(DateUtils.toDatePickerSelection(timestampHolder[0]))
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
@@ -209,5 +224,9 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
         });
 
         datePicker.show(getSupportFragmentManager(), "date_picker");
+    }
+
+    private boolean canHandleAsyncResult() {
+        return !isFinishing() && !isDestroyed();
     }
 }

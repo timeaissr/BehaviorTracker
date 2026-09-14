@@ -7,6 +7,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import com.github.timeaissr.behaviortracker.data.entity.Record;
+import com.github.timeaissr.behaviortracker.data.model.NumericStats;
 
 import java.util.List;
 
@@ -38,6 +39,11 @@ public interface RecordDao {
     /** Get sum of values for a behavior within a time range (for numeric stats). */
     @Query("SELECT COALESCE(SUM(value), 0) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :startTime AND :endTime")
     LiveData<Double> getSumInRange(long behaviorId, long startTime, long endTime);
+
+    /** Aggregate numeric statistics without loading the complete record history. */
+    @Query("SELECT COUNT(*) AS totalCount, COALESCE(SUM(value), 0) AS totalSum, "
+            + "MIN(timestamp) AS earliestTimestamp FROM records WHERE behaviorId = :behaviorId")
+    LiveData<NumericStats> getNumericStats(long behaviorId);
 
     /** Insert multiple records (for import). */
     @Insert

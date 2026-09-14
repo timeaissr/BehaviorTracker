@@ -53,6 +53,20 @@ public class StatsCalculatorTest {
         assertEquals(3, result.dailyAverage, 0.0001);
     }
 
+    @Test
+    public void numericAggregateUsesCalendarDays() {
+        LocalDate today = LocalDate.of(2026, 9, 11);
+        long earliestTimestamp = today.minusDays(2).atTime(12, 0)
+                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+        StatsCalculator.Result result = StatsCalculator.calculateNumeric(
+                2, 9, earliestTimestamp, today);
+
+        assertEquals(2, result.totalCount);
+        assertEquals(9, result.totalSum, 0.0001);
+        assertEquals(3, result.dailyAverage, 0.0001);
+    }
+
     private static Record record(LocalDate day, double value) {
         Record record = new Record();
         record.setTimestamp(day.atTime(12, 0).atZone(ZoneId.systemDefault())

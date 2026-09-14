@@ -5,7 +5,9 @@ import com.github.timeaissr.behaviortracker.data.entity.Record;
 import com.github.timeaissr.behaviortracker.data.entity.RecordType;
 
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /** Validates a backup completely before the current database is replaced. */
@@ -19,13 +21,13 @@ public final class BackupValidator {
             return false;
         }
 
-        Set<Long> behaviorIds = new HashSet<>();
+        Map<Long, RecordType> behaviorTypes = new HashMap<>();
         for (Behavior behavior : data.getBehaviors()) {
             if (behavior == null || behavior.getId() <= 0
                     || behavior.getName() == null || behavior.getName().trim().isEmpty()
                     || behavior.getRecordType() == null
                     || behavior.getCreatedAt() <= 0
-                    || !behaviorIds.add(behavior.getId())) {
+                    || behaviorTypes.put(behavior.getId(), behavior.getRecordType()) != null) {
                 return false;
             }
             if (behavior.getRecordType() == RecordType.NUMERIC
@@ -41,11 +43,15 @@ public final class BackupValidator {
 
         Set<Long> recordIds = new HashSet<>();
         for (Record record : records) {
+            RecordType recordType = record == null
+                    ? null : behaviorTypes.get(record.getBehaviorId());
             if (record == null || record.getId() <= 0
                     || !recordIds.add(record.getId())
-                    || !behaviorIds.contains(record.getBehaviorId())
+                    || recordType == null
                     || record.getTimestamp() <= 0
-                    || !Double.isFinite(record.getValue())) {
+                    || !Double.isFinite(record.getValue())
+                    || (recordType == RecordType.BOOLEAN
+                            && Double.compare(record.getValue(), 1.0) != 0)) {
                 return false;
             }
         }

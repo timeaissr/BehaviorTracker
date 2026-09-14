@@ -133,8 +133,11 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                 .setNegativeButton(R.string.cancel, null)
                 .create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener(v -> viewModel.insertBooleanRecord(
+                .setOnClickListener(v -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                    viewModel.insertBooleanRecord(
                         behaviorId, selectedTimestamp[0], success -> runOnUiThread(() -> {
+                            if (!canHandleAsyncResult()) return;
                             com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
                                     success
                                             ? currentBehavior.getName() + " - "
@@ -143,8 +146,11 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                                     com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
                             if (success) {
                                 dialog.dismiss();
+                            } else {
+                                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                             }
-                        }))));
+                        }));
+                }));
         dialog.show();
     }
 
@@ -182,12 +188,26 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                         return;
                     }
                     String note = editNote.getText().toString().trim();
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     viewModel.insertNumericRecord(behaviorId, value,
-                            note.isEmpty() ? null : note, selectedTimestamp[0]);
-                    com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
-                            currentBehavior.getName() + " - " + getString(R.string.record_added),
-                            com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
-                    dialog.dismiss();
+                            note.isEmpty() ? null : note, selectedTimestamp[0], success ->
+                                    runOnUiThread(() -> {
+                                        if (!canHandleAsyncResult()) return;
+                                        com.google.android.material.snackbar.Snackbar.make(
+                                                binding.getRoot(),
+                                                success
+                                                        ? currentBehavior.getName() + " - "
+                                                                + getString(R.string.record_added)
+                                                        : getString(R.string.save_error),
+                                                com.google.android.material.snackbar.Snackbar
+                                                        .LENGTH_SHORT).show();
+                                        if (success) {
+                                            dialog.dismiss();
+                                        } else {
+                                            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                                                    .setEnabled(true);
+                                        }
+                                    }));
                 }));
         dialog.show();
     }
@@ -198,7 +218,7 @@ public class BehaviorDetailActivity extends AppCompatActivity {
         com.google.android.material.datepicker.MaterialDatePicker<Long> datePicker = 
                 com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
                 .setTitleText("选择日期")
-                .setSelection(timestampHolder[0])
+                .setSelection(DateUtils.toDatePickerSelection(timestampHolder[0]))
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
@@ -442,5 +462,9 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                         viewModel.deleteRecord(record))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private boolean canHandleAsyncResult() {
+        return !isFinishing() && !isDestroyed();
     }
 }

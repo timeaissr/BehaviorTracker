@@ -52,6 +52,7 @@ public class AddBehaviorActivity extends AppCompatActivity {
             viewModel.setEditingBehaviorId(behaviorId);
             binding.toolbar.setTitle(R.string.edit_behavior);
             binding.btnDelete.setVisibility(View.VISIBLE);
+            binding.btnSave.setEnabled(false);
             // Existing records depend on their behavior type; changing it would reinterpret data.
             binding.btnTypeBoolean.setEnabled(false);
             binding.btnTypeNumeric.setEnabled(false);
@@ -64,8 +65,17 @@ public class AddBehaviorActivity extends AppCompatActivity {
                 finish();
             } else if (Boolean.FALSE.equals(complete)) {
                 binding.btnSave.setEnabled(true);
-                binding.btnDelete.setEnabled(true);
                 Snackbar.make(binding.getRoot(), R.string.save_error,
+                        Snackbar.LENGTH_SHORT).show();
+            }
+        });
+
+        viewModel.getDeleteComplete().observe(this, complete -> {
+            if (Boolean.TRUE.equals(complete)) {
+                finish();
+            } else if (Boolean.FALSE.equals(complete)) {
+                binding.btnDelete.setEnabled(true);
+                Snackbar.make(binding.getRoot(), R.string.delete_error,
                         Snackbar.LENGTH_SHORT).show();
             }
         });
@@ -158,6 +168,7 @@ public class AddBehaviorActivity extends AppCompatActivity {
                 selectedColor = behavior.getColor();
                 colorAdapter.setSelectedColor(selectedColor);
             }
+            binding.btnSave.setEnabled(true);
         });
 
     }

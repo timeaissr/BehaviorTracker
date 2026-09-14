@@ -3,6 +3,7 @@ package com.github.timeaissr.behaviortracker.util;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -70,6 +71,12 @@ public final class DateUtils {
 
     public static LocalDate toLocalDate(long timestamp) {
         return toZonedDateTime(timestamp).toLocalDate();
+    }
+
+    /** Convert a local calendar date to the UTC-midnight value expected by MaterialDatePicker. */
+    public static long toDatePickerSelection(long timestamp) {
+        return toLocalDate(timestamp).atStartOfDay(ZoneOffset.UTC)
+                .toInstant().toEpochMilli();
     }
 
     private static java.time.ZonedDateTime toZonedDateTime(long timestamp) {

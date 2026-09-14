@@ -9,6 +9,8 @@ import com.github.timeaissr.behaviortracker.data.dao.BehaviorDao;
 import com.github.timeaissr.behaviortracker.data.dao.RecordDao;
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
+import com.github.timeaissr.behaviortracker.data.entity.RecordType;
+import com.github.timeaissr.behaviortracker.data.model.NumericStats;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -64,6 +66,15 @@ public class BehaviorRepository {
                 if (existing != null) {
                     changes.setId(existing.getId());
                     changes.setCreatedAt(existing.getCreatedAt());
+                    // A behavior's type defines how every existing record is interpreted.
+                    changes.setRecordType(existing.getRecordType());
+                    if (existing.getRecordType() == RecordType.NUMERIC) {
+                        if (changes.getUnit() == null || changes.getUnit().trim().isEmpty()) {
+                            changes.setUnit(existing.getUnit());
+                        }
+                    } else {
+                        changes.setUnit(null);
+                    }
                     behaviorDao.update(changes);
                     success = true;
                 }
@@ -110,6 +121,10 @@ public class BehaviorRepository {
 
     public LiveData<Double> getSumInRange(long behaviorId, long startTime, long endTime) {
         return recordDao.getSumInRange(behaviorId, startTime, endTime);
+    }
+
+    public LiveData<NumericStats> getNumericStats(long behaviorId) {
+        return recordDao.getNumericStats(behaviorId);
     }
 
     public void insertRecord(Record record) {

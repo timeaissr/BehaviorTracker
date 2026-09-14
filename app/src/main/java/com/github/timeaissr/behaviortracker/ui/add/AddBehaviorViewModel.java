@@ -14,6 +14,7 @@ public class AddBehaviorViewModel extends AndroidViewModel {
 
     private final BehaviorRepository repository;
     private final MutableLiveData<Boolean> saveComplete = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> deleteComplete = new MutableLiveData<>();
     private long editingBehaviorId = -1;
 
     public AddBehaviorViewModel(@NonNull Application application) {
@@ -23,6 +24,10 @@ public class AddBehaviorViewModel extends AndroidViewModel {
 
     public LiveData<Boolean> getSaveComplete() {
         return saveComplete;
+    }
+
+    public LiveData<Boolean> getDeleteComplete() {
+        return deleteComplete;
     }
 
     public void setEditingBehaviorId(long id) {
@@ -50,7 +55,7 @@ public class AddBehaviorViewModel extends AndroidViewModel {
     }
 
     public void deleteBehavior(long behaviorId) {
-        repository.deleteBehavior(behaviorId, saveComplete::postValue);
+        repository.deleteBehavior(behaviorId, deleteComplete::postValue);
     }
 
     @Override

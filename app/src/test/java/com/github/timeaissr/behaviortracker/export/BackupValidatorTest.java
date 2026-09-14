@@ -9,6 +9,7 @@ import com.github.timeaissr.behaviortracker.data.entity.RecordType;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 public class BackupValidatorTest {
@@ -44,6 +45,39 @@ public class BackupValidatorTest {
         assertFalse(BackupValidator.isValid(data));
     }
 
+    @Test
+    public void acceptsMultipleBooleanRecordsOnTheSameDay() {
+        Behavior behavior = new Behavior();
+        behavior.setId(1);
+        behavior.setName("运动");
+        behavior.setRecordType(RecordType.BOOLEAN);
+
+        long timestamp = System.currentTimeMillis();
+        Record first = record(1, 1, timestamp, 1.0);
+        Record second = record(2, 1, timestamp + 1_000, 1.0);
+
+        ExportData data = new ExportData();
+        data.setBehaviors(Collections.singletonList(behavior));
+        data.setRecords(Arrays.asList(first, second));
+
+        assertTrue(BackupValidator.isValid(data));
+    }
+
+    @Test
+    public void rejectsBooleanRecordWithNonUnitValue() {
+        Behavior behavior = new Behavior();
+        behavior.setId(1);
+        behavior.setName("运动");
+        behavior.setRecordType(RecordType.BOOLEAN);
+
+        ExportData data = new ExportData();
+        data.setBehaviors(Collections.singletonList(behavior));
+        data.setRecords(Collections.singletonList(
+                record(1, 1, System.currentTimeMillis(), 42.0)));
+
+        assertFalse(BackupValidator.isValid(data));
+    }
+
     private static ExportData validBackup() {
         Behavior behavior = new Behavior();
         behavior.setId(1);
@@ -62,5 +96,14 @@ public class BackupValidatorTest {
         data.setBehaviors(Collections.singletonList(behavior));
         data.setRecords(Collections.singletonList(record));
         return data;
+    }
+
+    private static Record record(long id, long behaviorId, long timestamp, double value) {
+        Record record = new Record();
+        record.setId(id);
+        record.setBehaviorId(behaviorId);
+        record.setTimestamp(timestamp);
+        record.setValue(value);
+        return record;
     }
 }

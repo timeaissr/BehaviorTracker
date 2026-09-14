@@ -32,10 +32,25 @@ public final class StatsCalculator {
         if (isBoolean) {
             calculateStreaks(uniqueDays, today, result);
         } else {
-            LocalDate earliestDay = DateUtils.toLocalDate(earliestTimestamp);
-            long elapsedDays = Math.max(1, ChronoUnit.DAYS.between(earliestDay, today) + 1);
-            result.dailyAverage = result.totalSum / elapsedDays;
+            return calculateNumeric(
+                    result.totalCount, result.totalSum, earliestTimestamp, today);
         }
+        return result;
+    }
+
+    /** Calculate numeric statistics from database aggregates. */
+    public static Result calculateNumeric(
+            int totalCount, double totalSum, Long earliestTimestamp, LocalDate today) {
+        Result result = new Result();
+        result.totalCount = totalCount;
+        result.totalSum = totalSum;
+        if (totalCount <= 0 || earliestTimestamp == null) {
+            return result;
+        }
+
+        LocalDate earliestDay = DateUtils.toLocalDate(earliestTimestamp);
+        long elapsedDays = Math.max(1, ChronoUnit.DAYS.between(earliestDay, today) + 1);
+        result.dailyAverage = totalSum / elapsedDays;
         return result;
     }
 

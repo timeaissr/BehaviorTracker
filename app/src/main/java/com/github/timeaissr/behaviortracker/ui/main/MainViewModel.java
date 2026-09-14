@@ -62,7 +62,15 @@ public class MainViewModel extends AndroidViewModel {
 
     /** Quick-log a numeric behavior with custom timestamp. */
     public void quickLogNumeric(long behaviorId, double value, String note, long timestamp) {
+        quickLogNumeric(behaviorId, value, note, timestamp, null);
+    }
+
+    public void quickLogNumeric(long behaviorId, double value, String note, long timestamp,
+                                BehaviorRepository.OnOperationCallback callback) {
         if (!Double.isFinite(value)) {
+            if (callback != null) {
+                callback.onComplete(false);
+            }
             return;
         }
         Record record = new Record();
@@ -70,7 +78,7 @@ public class MainViewModel extends AndroidViewModel {
         record.setValue(value);
         record.setNote(note);
         record.setTimestamp(timestamp);
-        repository.insertRecord(record);
+        repository.insertRecord(record, callback);
     }
 
     @Override
