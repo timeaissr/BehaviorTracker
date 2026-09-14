@@ -8,6 +8,8 @@ import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -83,7 +85,13 @@ public class DataManager {
                 json = sb.toString();
             }
 
-            ExportData importedData = gson.fromJson(json, ExportData.class);
+            JsonElement root = JsonParser.parseString(json);
+            if (!root.isJsonObject()
+                    || !BackupValidator.hasRequiredJsonFields(root.getAsJsonObject())) {
+                return false;
+            }
+
+            ExportData importedData = gson.fromJson(root, ExportData.class);
             if (!BackupValidator.isValid(importedData)) {
                 return false;
             }

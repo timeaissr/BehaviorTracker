@@ -15,6 +15,7 @@ import com.github.timeaissr.behaviortracker.BehaviorTrackerApp;
 import com.github.timeaissr.behaviortracker.R;
 import com.github.timeaissr.behaviortracker.databinding.ActivitySettingsBinding;
 import com.github.timeaissr.behaviortracker.export.DataManager;
+import com.github.timeaissr.behaviortracker.ui.main.MainActivity;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.Executors;
@@ -107,8 +108,16 @@ public class SettingsActivity extends AppCompatActivity {
             getSharedPreferences(BehaviorTrackerApp.PREFERENCES_NAME, MODE_PRIVATE).edit()
                     .putBoolean(BehaviorTrackerApp.KEY_DYNAMIC_COLORS, enabled)
                     .apply();
-            recreate();
+            restartTask();
         });
+    }
+
+    /** Recreates every activity so the application-level color hook runs again. */
+    private void restartTask() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void setupDataButtons() {

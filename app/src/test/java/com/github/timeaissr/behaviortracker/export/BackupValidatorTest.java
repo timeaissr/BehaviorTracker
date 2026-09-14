@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
 import com.github.timeaissr.behaviortracker.data.entity.RecordType;
+import com.google.gson.JsonParser;
 
 import org.junit.Test;
 
@@ -76,6 +77,41 @@ public class BackupValidatorTest {
                 record(1, 1, System.currentTimeMillis(), 42.0)));
 
         assertFalse(BackupValidator.isValid(data));
+    }
+
+    @Test
+    public void rejectsJsonBehaviorWithoutCreatedAt() {
+        String json = "{\"version\":2,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
+                + "\"recordType\":\"BOOLEAN\"}],\"records\":[]}";
+
+        assertFalse(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(json).getAsJsonObject()));
+    }
+
+    @Test
+    public void rejectsJsonRecordWithoutTimestamp() {
+        String json = "{\"version\":2,\"behaviors\":[],"
+                + "\"records\":[{\"id\":1,\"behaviorId\":1,\"value\":1.0}]}";
+
+        assertFalse(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(json).getAsJsonObject()));
+    }
+
+    @Test
+    public void rejectsJsonRecordWithoutValue() {
+        String json = "{\"version\":2,\"behaviors\":[],"
+                + "\"records\":[{\"id\":1,\"behaviorId\":1,\"timestamp\":0}]}";
+
+        assertFalse(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(json).getAsJsonObject()));
+    }
+
+    @Test
+    public void acceptsRecordAtUnixEpoch() {
+        ExportData data = validBackup();
+        data.getRecords().get(0).setTimestamp(0);
+
+        assertTrue(BackupValidator.isValid(data));
     }
 
     private static ExportData validBackup() {

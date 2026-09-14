@@ -3,6 +3,8 @@ package com.github.timeaissr.behaviortracker.export;
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
 import com.github.timeaissr.behaviortracker.data.entity.RecordType;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.util.HashSet;
 import java.util.HashMap;
@@ -14,6 +16,51 @@ import java.util.Set;
 public final class BackupValidator {
 
     private BackupValidator() {}
+
+    /**
+     * Checks required fields before Gson can replace omitted primitive values with
+     * constructor defaults.
+     */
+    public static boolean hasRequiredJsonFields(JsonObject root) {
+        if (root == null || !hasValue(root, "version")
+                || !root.has("behaviors") || !root.get("behaviors").isJsonArray()) {
+            return false;
+        }
+
+        for (JsonElement element : root.getAsJsonArray("behaviors")) {
+            if (!element.isJsonObject()) {
+                return false;
+            }
+            JsonObject behavior = element.getAsJsonObject();
+            if (!hasValue(behavior, "id") || !hasValue(behavior, "name")
+                    || !hasValue(behavior, "recordType")
+                    || !hasValue(behavior, "createdAt")) {
+                return false;
+            }
+        }
+
+        if (!root.has("records") || root.get("records").isJsonNull()) {
+            return true;
+        }
+        if (!root.get("records").isJsonArray()) {
+            return false;
+        }
+        for (JsonElement element : root.getAsJsonArray("records")) {
+            if (!element.isJsonObject()) {
+                return false;
+            }
+            JsonObject record = element.getAsJsonObject();
+            if (!hasValue(record, "id") || !hasValue(record, "behaviorId")
+                    || !hasValue(record, "timestamp") || !hasValue(record, "value")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean hasValue(JsonObject object, String field) {
+        return object.has(field) && !object.get(field).isJsonNull();
+    }
 
     public static boolean isValid(ExportData data) {
         if (data == null || data.getVersion() < 1 || data.getVersion() > 2
@@ -48,7 +95,6 @@ public final class BackupValidator {
             if (record == null || record.getId() <= 0
                     || !recordIds.add(record.getId())
                     || recordType == null
-                    || record.getTimestamp() <= 0
                     || !Double.isFinite(record.getValue())
                     || (recordType == RecordType.BOOLEAN
                             && Double.compare(record.getValue(), 1.0) != 0)) {
