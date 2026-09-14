@@ -125,6 +125,14 @@ public class BackupValidatorTest {
         assertTrue(BackupValidator.isValid(data));
     }
 
+    @Test
+    public void acceptsBehaviorCreatedAtUnixEpoch() {
+        ExportData data = validBackup();
+        data.getBehaviors().get(0).setCreatedAt(0);
+
+        assertTrue(BackupValidator.isValid(data));
+    }
+
     private static ExportData validBackup() {
         Behavior behavior = new Behavior();
         behavior.setId(1);

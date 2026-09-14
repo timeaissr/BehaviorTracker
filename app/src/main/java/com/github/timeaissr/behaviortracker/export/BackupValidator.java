@@ -70,7 +70,6 @@ public final class BackupValidator {
             if (behavior == null || behavior.getId() <= 0
                     || behavior.getName() == null || behavior.getName().trim().isEmpty()
                     || behavior.getRecordType() == null
-                    || behavior.getCreatedAt() <= 0
                     || behaviorTypes.put(behavior.getId(), behavior.getRecordType()) != null) {
                 return false;
             }
