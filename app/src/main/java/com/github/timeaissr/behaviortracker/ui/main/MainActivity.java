@@ -20,6 +20,7 @@ import com.github.timeaissr.behaviortracker.databinding.ActivityMainBinding;
 import com.github.timeaissr.behaviortracker.ui.add.AddBehaviorActivity;
 import com.github.timeaissr.behaviortracker.ui.detail.BehaviorDetailActivity;
 import com.github.timeaissr.behaviortracker.ui.settings.SettingsActivity;
+import com.github.timeaissr.behaviortracker.util.DateUtils;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
