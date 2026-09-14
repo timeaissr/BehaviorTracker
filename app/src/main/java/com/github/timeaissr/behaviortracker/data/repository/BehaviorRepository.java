@@ -35,6 +35,10 @@ public class BehaviorRepository {
 
     // ==================== Behavior Operations ====================
 
+    public LiveData<List<Behavior>> getAllActiveBehaviors() {
+        return behaviorDao.getAllActive();
+    }
+
     public LiveData<List<Behavior>> getAllBehaviors() {
         return behaviorDao.getAll();
     }
@@ -66,6 +70,7 @@ public class BehaviorRepository {
                 if (existing != null) {
                     changes.setId(existing.getId());
                     changes.setCreatedAt(existing.getCreatedAt());
+                    changes.setArchived(existing.isArchived());
                     // A behavior's type defines how every existing record is interpreted.
                     changes.setRecordType(existing.getRecordType());
                     if (existing.getRecordType() == RecordType.NUMERIC) {

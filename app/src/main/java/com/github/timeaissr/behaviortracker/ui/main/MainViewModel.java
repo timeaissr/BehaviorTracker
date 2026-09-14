@@ -16,16 +16,16 @@ import java.util.List;
 public class MainViewModel extends AndroidViewModel {
 
     private final BehaviorRepository repository;
-    private final LiveData<List<Behavior>> allBehaviors;
+    private final LiveData<List<Behavior>> allActiveBehaviors;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
         repository = new BehaviorRepository(application);
-        allBehaviors = repository.getAllBehaviors();
+        allActiveBehaviors = repository.getAllActiveBehaviors();
     }
 
-    public LiveData<List<Behavior>> getAllBehaviors() {
-        return allBehaviors;
+    public LiveData<List<Behavior>> getAllActiveBehaviors() {
+        return allActiveBehaviors;
     }
 
     public LiveData<Integer> getRecordCountForDay(long behaviorId, long dayStart, long dayEnd) {

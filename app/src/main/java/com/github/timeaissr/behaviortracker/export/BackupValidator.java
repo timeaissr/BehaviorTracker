@@ -34,7 +34,8 @@ public final class BackupValidator {
             JsonObject behavior = element.getAsJsonObject();
             if (!hasValue(behavior, "id") || !hasValue(behavior, "name")
                     || !hasValue(behavior, "recordType")
-                    || !hasValue(behavior, "createdAt")) {
+                    || !hasValue(behavior, "createdAt")
+                    || !hasValue(behavior, "archived")) {
                 return false;
             }
         }

@@ -23,6 +23,9 @@ public interface BehaviorDao {
     @Delete
     void delete(Behavior behavior);
 
+    @Query("SELECT * FROM behaviors WHERE archived = 0 ORDER BY createdAt DESC")
+    LiveData<List<Behavior>> getAllActive();
+
     @Query("SELECT * FROM behaviors ORDER BY createdAt DESC")
     LiveData<List<Behavior>> getAll();
 

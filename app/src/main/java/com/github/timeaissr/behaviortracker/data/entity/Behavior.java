@@ -25,8 +25,12 @@ public class Behavior {
     /** Timestamp when this behavior was created. */
     private long createdAt;
 
+    /** Whether this behavior is hidden from the active behavior list. */
+    private boolean archived;
+
     public Behavior() {
         this.createdAt = System.currentTimeMillis();
+        this.archived = false;
     }
 
     // Getters and Setters
@@ -77,6 +81,14 @@ public class Behavior {
 
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
     }
 
 }

@@ -82,7 +82,16 @@ public class BackupValidatorTest {
     @Test
     public void rejectsJsonBehaviorWithoutCreatedAt() {
         String json = "{\"version\":2,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
-                + "\"recordType\":\"BOOLEAN\"}],\"records\":[]}";
+                + "\"recordType\":\"BOOLEAN\",\"archived\":false}],\"records\":[]}";
+
+        assertFalse(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(json).getAsJsonObject()));
+    }
+
+    @Test
+    public void rejectsJsonBehaviorWithoutArchivedState() {
+        String json = "{\"version\":2,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
+                + "\"recordType\":\"BOOLEAN\",\"createdAt\":0}],\"records\":[]}";
 
         assertFalse(BackupValidator.hasRequiredJsonFields(
                 JsonParser.parseString(json).getAsJsonObject()));

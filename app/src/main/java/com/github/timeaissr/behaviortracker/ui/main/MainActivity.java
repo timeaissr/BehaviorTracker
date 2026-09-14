@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
     }
 
     private void observeData() {
-        viewModel.getAllBehaviors().observe(this, behaviors -> {
+        viewModel.getAllActiveBehaviors().observe(this, behaviors -> {
             if (behaviors == null || behaviors.isEmpty()) {
                 binding.layoutEmpty.setVisibility(View.VISIBLE);
                 binding.recyclerBehaviors.setVisibility(View.GONE);

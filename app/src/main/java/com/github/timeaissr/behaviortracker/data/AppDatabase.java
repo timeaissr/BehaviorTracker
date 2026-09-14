@@ -60,7 +60,6 @@ public abstract class AppDatabase extends RoomDatabase {
             public void migrate(SupportSQLiteDatabase database) {
                 cancelLegacyReminders(context, database);
                 database.execSQL("DROP TABLE IF EXISTS reminders");
-                database.execSQL("ALTER TABLE behaviors DROP COLUMN archived");
                 database.execSQL("ALTER TABLE behaviors DROP COLUMN iconName");
             }
         };
