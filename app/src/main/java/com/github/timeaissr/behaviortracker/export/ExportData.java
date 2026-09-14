@@ -2,7 +2,6 @@ package com.github.timeaissr.behaviortracker.export;
 
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
-import com.github.timeaissr.behaviortracker.data.entity.Reminder;
 
 import java.util.List;
 
@@ -15,10 +14,9 @@ public class ExportData {
     private long exportTimestamp;
     private List<Behavior> behaviors;
     private List<Record> records;
-    private List<Reminder> reminders;
 
     public ExportData() {
-        this.version = 1;
+        this.version = 2;
         this.exportTimestamp = System.currentTimeMillis();
     }
 
@@ -52,13 +50,5 @@ public class ExportData {
 
     public void setRecords(List<Record> records) {
         this.records = records;
-    }
-
-    public List<Reminder> getReminders() {
-        return reminders;
-    }
-
-    public void setReminders(List<Reminder> reminders) {
-        this.reminders = reminders;
     }
 }

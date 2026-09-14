@@ -7,6 +7,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import com.github.timeaissr.behaviortracker.data.entity.Record;
+import com.github.timeaissr.behaviortracker.data.model.NumericStats;
 
 import java.util.List;
 
@@ -19,9 +20,6 @@ public interface RecordDao {
     @Delete
     void delete(Record record);
 
-    @Query("DELETE FROM records WHERE behaviorId = :behaviorId")
-    void deleteAllForBehavior(long behaviorId);
-
     /** Get all records for a behavior, ordered by newest first. */
     @Query("SELECT * FROM records WHERE behaviorId = :behaviorId ORDER BY timestamp DESC")
     LiveData<List<Record>> getRecordsForBehavior(long behaviorId);
@@ -29,10 +27,6 @@ public interface RecordDao {
     /** Get records for a behavior within a time range. */
     @Query("SELECT * FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :startTime AND :endTime ORDER BY timestamp ASC")
     LiveData<List<Record>> getRecordsInRange(long behaviorId, long startTime, long endTime);
-
-    /** Synchronous version for data export. */
-    @Query("SELECT * FROM records WHERE behaviorId = :behaviorId ORDER BY timestamp ASC")
-    List<Record> getRecordsForBehaviorSync(long behaviorId);
 
     /** Get all records (for export). */
     @Query("SELECT * FROM records ORDER BY timestamp ASC")
@@ -42,29 +36,14 @@ public interface RecordDao {
     @Query("SELECT COUNT(*) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :dayStart AND :dayEnd")
     LiveData<Integer> getRecordCountForDay(long behaviorId, long dayStart, long dayEnd);
 
-    /** Synchronous: count records for a day. */
-    @Query("SELECT COUNT(*) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :dayStart AND :dayEnd")
-    int getRecordCountForDaySync(long behaviorId, long dayStart, long dayEnd);
-
     /** Get sum of values for a behavior within a time range (for numeric stats). */
     @Query("SELECT COALESCE(SUM(value), 0) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :startTime AND :endTime")
     LiveData<Double> getSumInRange(long behaviorId, long startTime, long endTime);
 
-    /** Get total sum for a behavior (all time). */
-    @Query("SELECT COALESCE(SUM(value), 0) FROM records WHERE behaviorId = :behaviorId")
-    double getTotalSumSync(long behaviorId);
-
-    /** Get total record count for a behavior. */
-    @Query("SELECT COUNT(*) FROM records WHERE behaviorId = :behaviorId")
-    int getTotalCountSync(long behaviorId);
-
-    /** Get the earliest record timestamp for a behavior. */
-    @Query("SELECT MIN(timestamp) FROM records WHERE behaviorId = :behaviorId")
-    Long getEarliestTimestampSync(long behaviorId);
-
-    /** Get records for a behavior within a time range (synchronous, for chart data). */
-    @Query("SELECT * FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :startTime AND :endTime ORDER BY timestamp ASC")
-    List<Record> getRecordsInRangeSync(long behaviorId, long startTime, long endTime);
+    /** Aggregate numeric statistics without loading the complete record history. */
+    @Query("SELECT COUNT(*) AS totalCount, COALESCE(SUM(value), 0) AS totalSum, "
+            + "MIN(timestamp) AS earliestTimestamp FROM records WHERE behaviorId = :behaviorId")
+    LiveData<NumericStats> getNumericStats(long behaviorId);
 
     /** Insert multiple records (for import). */
     @Insert

@@ -6,12 +6,12 @@ import android.net.Uri;
 import com.github.timeaissr.behaviortracker.data.AppDatabase;
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
-import com.github.timeaissr.behaviortracker.data.entity.Reminder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -46,11 +46,9 @@ public class DataManager {
             // Gather all data synchronously
             List<Behavior> behaviors = db.behaviorDao().getAllSync();
             List<Record> records = db.recordDao().getAllSync();
-            List<Reminder> reminders = db.reminderDao().getAllSync();
 
             exportData.setBehaviors(behaviors);
             exportData.setRecords(records);
-            exportData.setReminders(reminders);
 
             // Write to output stream
             String json = gson.toJson(exportData);
@@ -61,7 +59,7 @@ public class DataManager {
             }
 
             return true;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
@@ -87,8 +85,14 @@ public class DataManager {
                 json = sb.toString();
             }
 
-            ExportData importedData = gson.fromJson(json, ExportData.class);
-            if (importedData == null || importedData.getBehaviors() == null) {
+            JsonElement root = JsonParser.parseString(json);
+            if (!root.isJsonObject()
+                    || !BackupValidator.hasRequiredJsonFields(root.getAsJsonObject())) {
+                return false;
+            }
+
+            ExportData importedData = gson.fromJson(root, ExportData.class);
+            if (!BackupValidator.isValid(importedData)) {
                 return false;
             }
 
@@ -96,8 +100,7 @@ public class DataManager {
             db.runInTransaction(() -> {
                 // Clear tables
                 db.recordDao().deleteAll();
-                db.reminderDao().deleteAll();
-                // Delete all behaviors (cascades delete records and reminders if any remain)
+                // Delete all behaviors (records have already been cleared).
                 List<Behavior> existing = db.behaviorDao().getAllSync();
                 for (Behavior b : existing) {
                     db.behaviorDao().delete(b);
@@ -113,11 +116,6 @@ public class DataManager {
                 // Insert records
                 if (importedData.getRecords() != null && !importedData.getRecords().isEmpty()) {
                     db.recordDao().insertAll(importedData.getRecords());
-                }
-
-                // Insert reminders
-                if (importedData.getReminders() != null && !importedData.getReminders().isEmpty()) {
-                    db.reminderDao().insertAll(importedData.getReminders());
                 }
             });
 

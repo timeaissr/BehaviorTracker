@@ -7,10 +7,10 @@ import androidx.lifecycle.LiveData;
 import com.github.timeaissr.behaviortracker.data.AppDatabase;
 import com.github.timeaissr.behaviortracker.data.dao.BehaviorDao;
 import com.github.timeaissr.behaviortracker.data.dao.RecordDao;
-import com.github.timeaissr.behaviortracker.data.dao.ReminderDao;
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
-import com.github.timeaissr.behaviortracker.data.entity.Reminder;
+import com.github.timeaissr.behaviortracker.data.entity.RecordType;
+import com.github.timeaissr.behaviortracker.data.model.NumericStats;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,15 +24,13 @@ public class BehaviorRepository {
 
     private final BehaviorDao behaviorDao;
     private final RecordDao recordDao;
-    private final ReminderDao reminderDao;
     private final ExecutorService executor;
 
     public BehaviorRepository(Application application) {
         AppDatabase db = AppDatabase.getInstance(application);
         behaviorDao = db.behaviorDao();
         recordDao = db.recordDao();
-        reminderDao = db.reminderDao();
-        executor = Executors.newFixedThreadPool(4);
+        executor = Executors.newSingleThreadExecutor();
     }
 
     // ==================== Behavior Operations ====================
@@ -51,19 +49,65 @@ public class BehaviorRepository {
 
     public void insertBehavior(Behavior behavior, OnInsertCallback callback) {
         executor.execute(() -> {
-            long id = behaviorDao.insert(behavior);
+            long id;
+            try {
+                id = behaviorDao.insert(behavior);
+            } catch (RuntimeException e) {
+                id = -1;
+            }
             if (callback != null) {
                 callback.onInserted(id);
             }
         });
     }
 
-    public void updateBehavior(Behavior behavior) {
-        executor.execute(() -> behaviorDao.update(behavior));
+    /** Update user-editable fields while preserving identity and creation metadata. */
+    public void updateBehavior(long behaviorId, Behavior changes, OnOperationCallback callback) {
+        executor.execute(() -> {
+            boolean success = false;
+            try {
+                Behavior existing = behaviorDao.getByIdSync(behaviorId);
+                if (existing != null) {
+                    changes.setId(existing.getId());
+                    changes.setCreatedAt(existing.getCreatedAt());
+                    changes.setArchived(existing.isArchived());
+                    // A behavior's type defines how every existing record is interpreted.
+                    changes.setRecordType(existing.getRecordType());
+                    if (existing.getRecordType() == RecordType.NUMERIC) {
+                        if (changes.getUnit() == null || changes.getUnit().trim().isEmpty()) {
+                            changes.setUnit(existing.getUnit());
+                        }
+                    } else {
+                        changes.setUnit(null);
+                    }
+                    behaviorDao.update(changes);
+                    success = true;
+                }
+            } catch (RuntimeException ignored) {
+                // Report failure through the callback.
+            }
+            if (callback != null) {
+                callback.onComplete(success);
+            }
+        });
     }
 
-    public void deleteBehavior(Behavior behavior) {
-        executor.execute(() -> behaviorDao.delete(behavior));
+    public void deleteBehavior(long behaviorId, OnOperationCallback callback) {
+        executor.execute(() -> {
+            boolean success = false;
+            try {
+                Behavior behavior = behaviorDao.getByIdSync(behaviorId);
+                if (behavior != null) {
+                    behaviorDao.delete(behavior);
+                    success = true;
+                }
+            } catch (RuntimeException ignored) {
+                // Report failure through the callback.
+            }
+            if (callback != null) {
+                callback.onComplete(success);
+            }
+        });
     }
 
     // ==================== Record Operations ====================
@@ -84,85 +128,47 @@ public class BehaviorRepository {
         return recordDao.getSumInRange(behaviorId, startTime, endTime);
     }
 
+    public LiveData<NumericStats> getNumericStats(long behaviorId) {
+        return recordDao.getNumericStats(behaviorId);
+    }
+
     public void insertRecord(Record record) {
-        executor.execute(() -> recordDao.insert(record));
+        insertRecord(record, null);
+    }
+
+    public void insertRecord(Record record, OnOperationCallback callback) {
+        executor.execute(() -> {
+            boolean success = false;
+            try {
+                recordDao.insert(record);
+                success = true;
+            } catch (RuntimeException ignored) {
+                // Report failure through the callback.
+            }
+            if (callback != null) {
+                callback.onComplete(success);
+            }
+        });
     }
 
     public void deleteRecord(Record record) {
         executor.execute(() -> recordDao.delete(record));
     }
 
-    // ==================== Reminder Operations ====================
-
-    public LiveData<Reminder> getReminderForBehavior(long behaviorId) {
-        return reminderDao.getForBehavior(behaviorId);
-    }
-
-    public void insertReminder(Reminder reminder, OnInsertCallback callback) {
-        executor.execute(() -> {
-            long id = reminderDao.insert(reminder);
-            if (callback != null) {
-                callback.onInserted(id);
-            }
-        });
-    }
-
-    public void updateReminder(Reminder reminder) {
-        executor.execute(() -> reminderDao.update(reminder));
-    }
-
-    public void deleteReminderForBehavior(long behaviorId) {
-        executor.execute(() -> reminderDao.deleteForBehavior(behaviorId));
-    }
-
-    // ==================== Sync Operations (for export/import) ====================
-
-    public List<Behavior> getAllBehaviorsSync() {
-        return behaviorDao.getAllSync();
-    }
-
-    public List<Record> getAllRecordsSync() {
-        return recordDao.getAllSync();
-    }
-
-    public List<Reminder> getAllRemindersSync() {
-        return reminderDao.getAllSync();
-    }
-
-    public List<Record> getRecordsForBehaviorSync(long behaviorId) {
-        return recordDao.getRecordsForBehaviorSync(behaviorId);
-    }
-
-    public List<Record> getRecordsInRangeSync(long behaviorId, long startTime, long endTime) {
-        return recordDao.getRecordsInRangeSync(behaviorId, startTime, endTime);
-    }
-
-    public Reminder getReminderForBehaviorSync(long behaviorId) {
-        return reminderDao.getForBehaviorSync(behaviorId);
-    }
-
-    public Behavior getBehaviorByIdSync(long id) {
-        return behaviorDao.getByIdSync(id);
-    }
-
-    public double getTotalSumSync(long behaviorId) {
-        return recordDao.getTotalSumSync(behaviorId);
-    }
-
-    public int getTotalCountSync(long behaviorId) {
-        return recordDao.getTotalCountSync(behaviorId);
-    }
-
-    public Long getEarliestTimestampSync(long behaviorId) {
-        return recordDao.getEarliestTimestampSync(behaviorId);
-    }
-
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    public void shutdown() {
+        executor.shutdown();
     }
 
     // Callback interface
     public interface OnInsertCallback {
         void onInserted(long id);
+    }
+
+    public interface OnOperationCallback {
+        void onComplete(boolean success);
     }
 }

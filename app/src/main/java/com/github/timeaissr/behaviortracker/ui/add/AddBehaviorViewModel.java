@@ -8,13 +8,13 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
-import com.github.timeaissr.behaviortracker.data.entity.Reminder;
 import com.github.timeaissr.behaviortracker.data.repository.BehaviorRepository;
 
 public class AddBehaviorViewModel extends AndroidViewModel {
 
     private final BehaviorRepository repository;
     private final MutableLiveData<Boolean> saveComplete = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> deleteComplete = new MutableLiveData<>();
     private long editingBehaviorId = -1;
 
     public AddBehaviorViewModel(@NonNull Application application) {
@@ -24,6 +24,10 @@ public class AddBehaviorViewModel extends AndroidViewModel {
 
     public LiveData<Boolean> getSaveComplete() {
         return saveComplete;
+    }
+
+    public LiveData<Boolean> getDeleteComplete() {
+        return deleteComplete;
     }
 
     public void setEditingBehaviorId(long id) {
@@ -42,49 +46,20 @@ public class AddBehaviorViewModel extends AndroidViewModel {
         return repository.getBehaviorById(id);
     }
 
-    public LiveData<Reminder> getReminder(long behaviorId) {
-        return repository.getReminderForBehavior(behaviorId);
-    }
-
-    public void saveBehavior(Behavior behavior, Reminder reminder) {
+    public void saveBehavior(Behavior behavior) {
         if (isEditing()) {
-            behavior.setId(editingBehaviorId);
-            repository.updateBehavior(behavior);
-
-            if (reminder != null) {
-                reminder.setBehaviorId(editingBehaviorId);
-                repository.getExecutor().execute(() -> {
-                    Reminder existing = repository.getReminderForBehaviorSync(editingBehaviorId);
-                    if (existing != null) {
-                        reminder.setId(existing.getId());
-                        repository.updateReminder(reminder);
-                    } else {
-                        repository.insertReminder(reminder, null);
-                    }
-                    saveComplete.postValue(true);
-                });
-            } else {
-                repository.deleteReminderForBehavior(editingBehaviorId);
-                saveComplete.postValue(true);
-            }
+            repository.updateBehavior(editingBehaviorId, behavior, saveComplete::postValue);
         } else {
-            repository.insertBehavior(behavior, id -> {
-                if (reminder != null) {
-                    reminder.setBehaviorId(id);
-                    repository.insertReminder(reminder, null);
-                }
-                saveComplete.postValue(true);
-            });
+            repository.insertBehavior(behavior, id -> saveComplete.postValue(id > 0));
         }
     }
 
     public void deleteBehavior(long behaviorId) {
-        repository.getExecutor().execute(() -> {
-            Behavior behavior = repository.getBehaviorByIdSync(behaviorId);
-            if (behavior != null) {
-                repository.deleteBehavior(behavior);
-            }
-            saveComplete.postValue(true);
-        });
+        repository.deleteBehavior(behaviorId, deleteComplete::postValue);
+    }
+
+    @Override
+    protected void onCleared() {
+        repository.shutdown();
     }
 }
