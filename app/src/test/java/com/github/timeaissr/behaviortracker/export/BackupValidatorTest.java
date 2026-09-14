@@ -107,6 +107,17 @@ public class BackupValidatorTest {
     }
 
     @Test
+    public void rejectsJsonWithoutRecordsArray() {
+        String missing = "{\"version\":2,\"behaviors\":[]}";
+        String nullRecords = "{\"version\":2,\"behaviors\":[],\"records\":null}";
+
+        assertFalse(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(missing).getAsJsonObject()));
+        assertFalse(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(nullRecords).getAsJsonObject()));
+    }
+
+    @Test
     public void acceptsRecordAtUnixEpoch() {
         ExportData data = validBackup();
         data.getRecords().get(0).setTimestamp(0);

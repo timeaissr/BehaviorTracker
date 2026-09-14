@@ -39,10 +39,7 @@ public final class BackupValidator {
             }
         }
 
-        if (!root.has("records") || root.get("records").isJsonNull()) {
-            return true;
-        }
-        if (!root.get("records").isJsonArray()) {
+        if (!root.has("records") || !root.get("records").isJsonArray()) {
             return false;
         }
         for (JsonElement element : root.getAsJsonArray("records")) {
