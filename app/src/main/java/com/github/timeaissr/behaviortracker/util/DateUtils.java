@@ -1,21 +1,20 @@
 package com.github.timeaissr.behaviortracker.util;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Utility class for date/time operations.
  */
 public final class DateUtils {
 
-    private static final SimpleDateFormat DATE_FORMAT =
-            new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private static final SimpleDateFormat TIME_FORMAT =
-            new SimpleDateFormat("HH:mm", Locale.getDefault());
-    private static final SimpleDateFormat DATETIME_FORMAT =
-            new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATETIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private DateUtils() {}
 
@@ -26,13 +25,8 @@ public final class DateUtils {
 
     /** Get the start of the day for a given timestamp. */
     public static long getStartOfDay(long timestamp) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(timestamp);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
+        return toLocalDate(timestamp).atStartOfDay(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
     }
 
     /** Get the end of today (23:59:59.999). */
@@ -42,52 +36,50 @@ public final class DateUtils {
 
     /** Get the end of the day for a given timestamp. */
     public static long getEndOfDay(long timestamp) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(timestamp);
-        cal.set(Calendar.HOUR_OF_DAY, 23);
-        cal.set(Calendar.MINUTE, 59);
-        cal.set(Calendar.SECOND, 59);
-        cal.set(Calendar.MILLISECOND, 999);
-        return cal.getTimeInMillis();
+        return toLocalDate(timestamp).plusDays(1).atStartOfDay(ZoneId.systemDefault())
+                .toInstant().toEpochMilli() - 1;
     }
 
     /** Get start of N days ago. */
     public static long getStartOfDaysAgo(int days) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, -days);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
+        return LocalDate.now().minusDays(days).atStartOfDay(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
     }
 
     public static String formatDate(long timestamp) {
-        return DATE_FORMAT.format(new Date(timestamp));
+        return DATE_FORMAT.format(toZonedDateTime(timestamp));
     }
 
     public static String formatTime(long timestamp) {
-        return TIME_FORMAT.format(new Date(timestamp));
+        return TIME_FORMAT.format(toZonedDateTime(timestamp));
     }
 
     public static String formatDateTime(long timestamp) {
-        return DATETIME_FORMAT.format(new Date(timestamp));
+        return DATETIME_FORMAT.format(toZonedDateTime(timestamp));
     }
 
     /** Get day of week (1=Sunday, 7=Saturday). */
     public static int getDayOfWeek(long timestamp) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(timestamp);
-        return cal.get(Calendar.DAY_OF_WEEK);
+        // Preserve java.util.Calendar's numbering: Sunday=1, Saturday=7.
+        return toLocalDate(timestamp).getDayOfWeek().getValue() % 7 + 1;
     }
 
     /** Check if two timestamps are on the same day. */
     public static boolean isSameDay(long timestamp1, long timestamp2) {
-        Calendar cal1 = Calendar.getInstance();
-        cal1.setTimeInMillis(timestamp1);
-        Calendar cal2 = Calendar.getInstance();
-        cal2.setTimeInMillis(timestamp2);
-        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)
-                && cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
+        return toLocalDate(timestamp1).equals(toLocalDate(timestamp2));
+    }
+
+    public static LocalDate toLocalDate(long timestamp) {
+        return toZonedDateTime(timestamp).toLocalDate();
+    }
+
+    /** Convert a local calendar date to the UTC-midnight value expected by MaterialDatePicker. */
+    public static long toDatePickerSelection(long timestamp) {
+        return toLocalDate(timestamp).atStartOfDay(ZoneOffset.UTC)
+                .toInstant().toEpochMilli();
+    }
+
+    private static java.time.ZonedDateTime toZonedDateTime(long timestamp) {
+        return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault());
     }
 }

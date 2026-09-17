@@ -38,16 +38,21 @@ public class MainViewModel extends AndroidViewModel {
 
     /** Quick-log a boolean behavior (just inserts a record with value 1). */
     public void quickLogBoolean(long behaviorId) {
-        quickLogBoolean(behaviorId, System.currentTimeMillis());
+        quickLogBoolean(behaviorId, System.currentTimeMillis(), null);
     }
 
     /** Quick-log a boolean behavior with custom timestamp. */
     public void quickLogBoolean(long behaviorId, long timestamp) {
+        quickLogBoolean(behaviorId, timestamp, null);
+    }
+
+    public void quickLogBoolean(long behaviorId, long timestamp,
+                                BehaviorRepository.OnOperationCallback callback) {
         Record record = new Record();
         record.setBehaviorId(behaviorId);
         record.setValue(1.0);
         record.setTimestamp(timestamp);
-        repository.insertRecord(record);
+        repository.insertRecord(record, callback);
     }
 
     /** Quick-log a numeric behavior with a given value and optional note. */
@@ -57,15 +62,27 @@ public class MainViewModel extends AndroidViewModel {
 
     /** Quick-log a numeric behavior with custom timestamp. */
     public void quickLogNumeric(long behaviorId, double value, String note, long timestamp) {
+        quickLogNumeric(behaviorId, value, note, timestamp, null);
+    }
+
+    public void quickLogNumeric(long behaviorId, double value, String note, long timestamp,
+                                BehaviorRepository.OnOperationCallback callback) {
+        if (!Double.isFinite(value)) {
+            if (callback != null) {
+                callback.onComplete(false);
+            }
+            return;
+        }
         Record record = new Record();
         record.setBehaviorId(behaviorId);
         record.setValue(value);
         record.setNote(note);
         record.setTimestamp(timestamp);
-        repository.insertRecord(record);
+        repository.insertRecord(record, callback);
     }
 
-    public BehaviorRepository getRepository() {
-        return repository;
+    @Override
+    protected void onCleared() {
+        repository.shutdown();
     }
 }

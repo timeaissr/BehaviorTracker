@@ -1,12 +1,12 @@
 # 行为记录 (BehaviorTracker)
 
-一款完全由AI构建的Android行为追踪应用，支持布尔值（打卡）和数值型记录，提供统计图表、提醒和数据导出/导入功能。
+一款原生 Android 行为追踪应用，支持布尔值（打卡）和数值型记录，提供统计图表和数据导出/导入功能。
 
 [![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat-square&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/TimeAIssr/BehaviorTracker)
 
 ## 功能特性
 
-- **行为管理**：创建、编辑、归档自定义行为，支持8种颜色选择
+- **行为管理**：创建、编辑、删除自定义行为，支持 8 种颜色选择
 - **两种记录类型**：
   - 布尔型：打卡式记录（是/否），支持选择日期时间
   - 数值型：带单位的数值记录（如"ml"、"km"），支持备注
@@ -14,10 +14,6 @@
   - 布尔型：连续打卡天数、最长连续、总次数
   - 数值型：日均值、总次数、总和
   - 动态图表（柱状图/折线图），支持7/30/90天时间范围
-- **提醒功能**：
-  - 固定时间提醒：每日指定时间
-  - 间隔提醒：在时间窗口内按间隔重复
-  - 开机自动恢复提醒
 - **数据导出/导入**：通过JSON格式完整备份和恢复数据（使用SAF，无需存储权限）
 - **主题设置**：系统/浅色/深色模式切换，支持Material You动态配色
 
@@ -33,8 +29,7 @@
 | UI框架 | Material Design 3, ViewBinding |
 | 图表 | MPAndroidChart v3.1.0 |
 | 序列化 | Gson 2.13.2 |
-| 后台任务 | WorkManager 2.11.1 |
-| 构建工具 | Gradle 9.1.0 |
+| 构建工具 | Gradle 9.4.0 / Android Gradle Plugin 9.1.0 |
 
 ## 项目结构
 
@@ -44,13 +39,10 @@ app/src/main/java/com/github/timeaissr/behaviortracker/
 │   ├── entity/                    # Room实体
 │   │   ├── Behavior.java          # 行为实体
 │   │   ├── Record.java            # 记录实体
-│   │   ├── Reminder.java          # 提醒实体
-│   │   ├── RecordType.java        # 记录类型枚举
-│   │   └── ReminderType.java      # 提醒类型枚举
+│   │   └── RecordType.java        # 记录类型枚举
 │   ├── dao/                       # 数据访问对象
 │   │   ├── BehaviorDao.java
-│   │   ├── RecordDao.java
-│   │   └── ReminderDao.java
+│   │   └── RecordDao.java
 │   ├── converter/
 │   │   └── Converters.java        # Room类型转换器
 │   ├── repository/
@@ -71,15 +63,13 @@ app/src/main/java/com/github/timeaissr/behaviortracker/
 │   │   └── RecordAdapter.java
 │   └── settings/                  # 设置
 │       └── SettingsActivity.java
-├── notification/                  # 提醒通知
-│   ├── BootReceiver.java          # 开机广播接收器
-│   ├── ReminderReceiver.java      # 提醒广播接收器
-│   └── ReminderScheduler.java     # 提醒调度器
 ├── export/                        # 数据导出/导入
 │   ├── DataManager.java
-│   └── ExportData.java
+│   ├── ExportData.java
+│   └── BackupValidator.java
 ├── util/
-│   └── DateUtils.java             # 日期工具类
+│   ├── DateUtils.java             # 日期工具类
+│   └── StatsCalculator.java       # 统计计算
 └── BehaviorTrackerApp.java        # Application类
 ```
 
@@ -99,7 +89,7 @@ app/src/main/java/com/github/timeaissr/behaviortracker/
 ./gradlew connectedAndroidTest
 
 # 运行单个测试类
-./gradlew test --tests "com.github.timeaissr.behaviortracker.ExampleUnitTest"
+./gradlew testDebugUnitTest --tests "com.github.timeaissr.behaviortracker.util.StatsCalculatorTest"
 
 # 清理并构建
 ./gradlew clean assembleDebug
@@ -119,7 +109,6 @@ app/src/main/java/com/github/timeaissr/behaviortracker/
 | unit | String (可空) | 数值型单位 |
 | color | String | 卡片颜色（十六进制） |
 | createdAt | long | 创建时间戳 |
-| archived | boolean | 软删除标记 |
 
 ### Record（记录）
 | 字段 | 类型 | 说明 |
@@ -129,15 +118,3 @@ app/src/main/java/com/github/timeaissr/behaviortracker/
 | timestamp | long | 记录时间戳 |
 | value | double | 数值（布尔型固定为1.0） |
 | note | String (可空) | 备注 |
-
-### Reminder（提醒）
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | long (自增主键) | 唯一标识 |
-| behaviorId | long (外键) | 关联行为 |
-| active | boolean | 是否启用 |
-| type | ReminderType | FIXED_TIME 或 INTERVAL |
-| timeOfDayMinutes | int | 固定时间（距午夜分钟数） |
-| startTimeMinutes | int | 间隔窗口开始 |
-| endTimeMinutes | int | 间隔窗口结束 |
-| intervalMinutes | int | 间隔分钟数 |

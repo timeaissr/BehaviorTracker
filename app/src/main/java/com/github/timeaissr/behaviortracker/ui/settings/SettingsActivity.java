@@ -11,18 +11,21 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
+import com.github.timeaissr.behaviortracker.BehaviorTrackerApp;
 import com.github.timeaissr.behaviortracker.R;
 import com.github.timeaissr.behaviortracker.databinding.ActivitySettingsBinding;
 import com.github.timeaissr.behaviortracker.export.DataManager;
-import com.github.timeaissr.behaviortracker.notification.ReminderScheduler;
+import com.github.timeaissr.behaviortracker.ui.main.MainActivity;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private ActivitySettingsBinding binding;
     private DataManager dataManager;
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
 
     // SAF launchers
     private final ActivityResultLauncher<Intent> exportLauncher =
@@ -65,7 +68,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void setupTheme() {
         // Load current theme preference
-        int currentMode = AppCompatDelegate.getDefaultNightMode();
+        int currentMode = getSharedPreferences(BehaviorTrackerApp.PREFERENCES_NAME, MODE_PRIVATE)
+                .getInt(BehaviorTrackerApp.KEY_THEME_MODE,
+                        AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         switch (currentMode) {
             case AppCompatDelegate.MODE_NIGHT_YES:
                 binding.radioDark.setChecked(true);
@@ -79,14 +84,40 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         binding.radioTheme.setOnCheckedChangeListener((group, checkedId) -> {
+            int newMode;
             if (checkedId == R.id.radio_system) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                newMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
             } else if (checkedId == R.id.radio_light) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                newMode = AppCompatDelegate.MODE_NIGHT_NO;
             } else if (checkedId == R.id.radio_dark) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                newMode = AppCompatDelegate.MODE_NIGHT_YES;
+            } else {
+                return;
             }
+            getSharedPreferences(BehaviorTrackerApp.PREFERENCES_NAME, MODE_PRIVATE).edit()
+                    .putInt(BehaviorTrackerApp.KEY_THEME_MODE, newMode)
+                    .apply();
+            AppCompatDelegate.setDefaultNightMode(newMode);
         });
+
+        boolean dynamicColors = getSharedPreferences(
+                BehaviorTrackerApp.PREFERENCES_NAME, MODE_PRIVATE)
+                .getBoolean(BehaviorTrackerApp.KEY_DYNAMIC_COLORS, true);
+        binding.switchDynamicColor.setChecked(dynamicColors);
+        binding.switchDynamicColor.setOnCheckedChangeListener((button, enabled) -> {
+            getSharedPreferences(BehaviorTrackerApp.PREFERENCES_NAME, MODE_PRIVATE).edit()
+                    .putBoolean(BehaviorTrackerApp.KEY_DYNAMIC_COLORS, enabled)
+                    .apply();
+            restartTask();
+        });
+    }
+
+    /** Recreates every activity so the application-level color hook runs again. */
+    private void restartTask() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void setupDataButtons() {
@@ -107,25 +138,25 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void performExport(Uri uri) {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        ioExecutor.execute(() -> {
             boolean success = dataManager.exportData(uri);
             runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
                 Snackbar.make(binding.getRoot(),
-                        success ? R.string.export_success : R.string.import_error,
+                        success ? R.string.export_success : R.string.export_error,
                         Snackbar.LENGTH_SHORT).show();
             });
         });
     }
 
     private void performImport(Uri uri) {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        ioExecutor.execute(() -> {
             boolean success = dataManager.importData(uri);
             runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
                 if (success) {
                     Snackbar.make(binding.getRoot(), R.string.import_success,
                             Snackbar.LENGTH_SHORT).show();
-                    // Reschedule reminders after import
-                    ReminderScheduler.rescheduleAllReminders(this);
                 } else {
                     Snackbar.make(binding.getRoot(), R.string.import_error,
                             Snackbar.LENGTH_SHORT).show();
@@ -141,5 +172,11 @@ public class SettingsActivity extends AppCompatActivity {
         } catch (PackageManager.NameNotFoundException e) {
             binding.textVersion.setText(String.format(getString(R.string.version), "1.0.0"));
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ioExecutor.shutdown();
     }
 }
