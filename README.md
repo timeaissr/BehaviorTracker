@@ -98,6 +98,13 @@ app/src/main/java/com/github/timeaissr/behaviortracker/
 ./gradlew installDebug
 ```
 
+## 项目文档
+
+- [开发、维护与发布标准流程](docs/DEVELOPMENT_MAINTENANCE_RELEASE.md)
+- [贡献指南](CONTRIBUTING.md)
+
+涉及分支、测试、数据库迁移、版本号、APK 签名和 GitHub Release 的操作，请以标准流程文档为准。
+
 ## 数据库设计
 
 ### Behavior（行为）
