@@ -106,9 +106,13 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
                 .inflate(R.layout.dialog_boolean_input, null);
         
         MaterialButton btnPickDatetime = dialogView.findViewById(R.id.btn_pick_datetime);
-        final long[] selectedTimestamp = {System.currentTimeMillis()};
+        final long[] selectedTimestamp = {behavior.isDetailedTime()
+                ? System.currentTimeMillis() : DateUtils.getStartOfDay()};
         
-        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(selectedTimestamp, btnPickDatetime));
+        btnPickDatetime.setText(behavior.isDetailedTime()
+                ? R.string.pick_date_time : R.string.pick_date);
+        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(
+                selectedTimestamp, btnPickDatetime, behavior.isDetailedTime()));
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle(behavior.getName())
@@ -137,9 +141,13 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
         MaterialButton btnPickDatetime = dialogView.findViewById(R.id.btn_pick_datetime);
 
         String unit = behavior.getUnit() != null ? " (" + behavior.getUnit() + ")" : "";
-        final long[] selectedTimestamp = {System.currentTimeMillis()};
+        final long[] selectedTimestamp = {behavior.isDetailedTime()
+                ? System.currentTimeMillis() : DateUtils.getStartOfDay()};
         
-        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(selectedTimestamp, btnPickDatetime));
+        btnPickDatetime.setText(behavior.isDetailedTime()
+                ? R.string.pick_date_time : R.string.pick_date);
+        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(
+                selectedTimestamp, btnPickDatetime, behavior.isDetailedTime()));
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(behavior.getName() + unit)
@@ -184,7 +192,8 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
         dialog.show();
     }
 
-    private void showDateTimePicker(final long[] timestampHolder, MaterialButton button) {
+    private void showDateTimePicker(final long[] timestampHolder, MaterialButton button,
+                                    boolean detailedTime) {
         // Show date picker first
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("选择日期")
@@ -192,6 +201,19 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
+            if (!detailedTime) {
+                java.util.Calendar selectedDateUtc = java.util.Calendar.getInstance(
+                        TimeZone.getTimeZone("UTC"));
+                selectedDateUtc.setTimeInMillis(selection);
+                java.util.Calendar localDate = java.util.Calendar.getInstance();
+                localDate.clear();
+                localDate.set(selectedDateUtc.get(java.util.Calendar.YEAR),
+                        selectedDateUtc.get(java.util.Calendar.MONTH),
+                        selectedDateUtc.get(java.util.Calendar.DAY_OF_MONTH));
+                timestampHolder[0] = localDate.getTimeInMillis();
+                button.setText(DateUtils.formatDate(timestampHolder[0]));
+                return;
+            }
             // After date is selected, show time picker
             Calendar selectedDateUtc = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             selectedDateUtc.setTimeInMillis(selection);

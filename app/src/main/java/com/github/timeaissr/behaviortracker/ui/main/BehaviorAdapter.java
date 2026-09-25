@@ -55,6 +55,7 @@ public class BehaviorAdapter extends ListAdapter<Behavior, BehaviorAdapter.ViewH
                 public boolean areContentsTheSame(@NonNull Behavior oldItem, @NonNull Behavior newItem) {
                     return oldItem.getName().equals(newItem.getName())
                             && oldItem.getRecordType() == newItem.getRecordType()
+                            && oldItem.isDetailedTime() == newItem.isDetailedTime()
                             && Objects.equals(oldItem.getUnit(), newItem.getUnit())
                             && Objects.equals(oldItem.getColor(), newItem.getColor());
                 }

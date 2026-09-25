@@ -18,9 +18,10 @@
     <string name="edit_behavior">编辑行为</string>
     <string name="behavior_name">行为名称</string>
     <string name="behavior_name_hint">例如：喝水、锻炼、阅读</string>
-    <string name="record_type">记录方式</string>
-    <string name="type_boolean">是/否 打卡</string>
-    <string name="type_numeric">数值记录</string>
+    <string name="record_detailed_time">记录详细时间（小时和分钟）</string>
+    <string name="record_numeric_value">记录数值</string>
+    <string name="pick_date">选择日期</string>
+    <string name="pick_date_time">选择日期和时间</string>
     <string name="unit_label">单位</string>
     <string name="unit_hint">例如：ml、km、分钟</string>
     <string name="choose_color">选择颜色</string>
@@ -30,6 +31,7 @@
     <string name="delete_behavior_confirm">确定要删除这个行为吗？\n所有相关记录也将被删除。</string>
 
     <!-- Record Input -->
+    <string name="record_date">记录日期</string>
     <string name="input_value">输入数值</string>
     <string name="record_note">备注（可选）</string>
     <string name="confirm">确认</string>

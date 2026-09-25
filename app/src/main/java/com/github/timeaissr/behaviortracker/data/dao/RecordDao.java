@@ -32,6 +32,9 @@ public interface RecordDao {
     @Query("SELECT * FROM records ORDER BY timestamp ASC")
     List<Record> getAllSync();
 
+    @Query("SELECT COUNT(*) FROM records WHERE behaviorId = :behaviorId")
+    int getRecordCountSync(long behaviorId);
+
     /** Check if a boolean behavior has been logged today. */
     @Query("SELECT COUNT(*) FROM records WHERE behaviorId = :behaviorId AND timestamp BETWEEN :dayStart AND :dayEnd")
     LiveData<Integer> getRecordCountForDay(long behaviorId, long dayStart, long dayEnd);

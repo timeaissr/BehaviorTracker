@@ -1,6 +1,7 @@
 package com.github.timeaissr.behaviortracker.data.entity;
 
 import androidx.room.Entity;
+import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
 
 /**
@@ -15,6 +16,10 @@ public class Behavior {
     private String name;
 
     private RecordType recordType;
+
+    /** Whether records keep and display an hour and minute. */
+    @ColumnInfo(defaultValue = "1")
+    private boolean detailedTime;
 
     /** Unit for numeric records (e.g., "ml", "km"). Null for boolean type. */
     private String unit;
@@ -57,6 +62,14 @@ public class Behavior {
 
     public void setRecordType(RecordType recordType) {
         this.recordType = recordType;
+    }
+
+    public boolean isDetailedTime() {
+        return detailedTime;
+    }
+
+    public void setDetailedTime(boolean detailedTime) {
+        this.detailedTime = detailedTime;
     }
 
     public String getUnit() {

@@ -8,7 +8,10 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
+import com.github.timeaissr.behaviortracker.data.entity.Record;
 import com.github.timeaissr.behaviortracker.data.repository.BehaviorRepository;
+
+import java.util.List;
 
 public class AddBehaviorViewModel extends AndroidViewModel {
 
@@ -44,6 +47,10 @@ public class AddBehaviorViewModel extends AndroidViewModel {
 
     public LiveData<Behavior> getBehavior(long id) {
         return repository.getBehaviorById(id);
+    }
+
+    public LiveData<List<Record>> getRecords(long id) {
+        return repository.getRecordsForBehavior(id);
     }
 
     public void saveBehavior(Behavior behavior) {
