@@ -41,9 +41,29 @@ public class BackupValidatorTest {
     @Test
     public void rejectsUnsupportedBackupVersion() {
         ExportData data = validBackup();
-        data.setVersion(3);
+        data.setVersion(4);
 
         assertFalse(BackupValidator.isValid(data));
+    }
+
+    @Test
+    public void requiresDetailedTimeInCurrentBackup() {
+        String json = "{\"version\":3,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
+                + "\"recordType\":\"BOOLEAN\",\"createdAt\":0,\"archived\":false}],"
+                + "\"records\":[]}";
+
+        assertFalse(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(json).getAsJsonObject()));
+    }
+
+    @Test
+    public void acceptsDetailedTimeInCurrentBackup() {
+        String json = "{\"version\":3,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
+                + "\"recordType\":\"BOOLEAN\",\"detailedTime\":false,"
+                + "\"createdAt\":0,\"archived\":false}],\"records\":[]}";
+
+        assertTrue(BackupValidator.hasRequiredJsonFields(
+                JsonParser.parseString(json).getAsJsonObject()));
     }
 
     @Test

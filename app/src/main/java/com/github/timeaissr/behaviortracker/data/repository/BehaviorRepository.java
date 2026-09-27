@@ -71,13 +71,11 @@ public class BehaviorRepository {
                     changes.setId(existing.getId());
                     changes.setCreatedAt(existing.getCreatedAt());
                     changes.setArchived(existing.isArchived());
-                    // A behavior's type defines how every existing record is interpreted.
-                    changes.setRecordType(existing.getRecordType());
-                    if (existing.getRecordType() == RecordType.NUMERIC) {
-                        if (changes.getUnit() == null || changes.getUnit().trim().isEmpty()) {
-                            changes.setUnit(existing.getUnit());
-                        }
-                    } else {
+                    if (changes.getRecordType() != existing.getRecordType()
+                            && recordDao.getRecordCountSync(behaviorId) > 0) {
+                        throw new IllegalStateException("Cannot reinterpret existing records");
+                    }
+                    if (changes.getRecordType() == RecordType.BOOLEAN) {
                         changes.setUnit(null);
                     }
                     behaviorDao.update(changes);

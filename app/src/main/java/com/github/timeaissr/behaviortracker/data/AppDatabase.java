@@ -23,7 +23,7 @@ import com.github.timeaissr.behaviortracker.data.entity.Record;
 
 @Database(
     entities = {Behavior.class, Record.class},
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters.class)
@@ -47,12 +47,20 @@ public abstract class AppDatabase extends RoomDatabase {
                             context.getApplicationContext(),
                             AppDatabase.class,
                             "behavior_tracker.db"
-                    ).addMigrations(createMigration1To2(context.getApplicationContext())).build();
+                    ).addMigrations(createMigration1To2(context.getApplicationContext()),
+                            MIGRATION_2_3).build();
                 }
             }
         }
         return INSTANCE;
     }
+
+    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE behaviors ADD COLUMN detailedTime INTEGER NOT NULL DEFAULT 1");
+        }
+    };
 
     private static Migration createMigration1To2(Context context) {
         return new Migration(1, 2) {

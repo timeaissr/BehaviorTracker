@@ -49,40 +49,20 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Record Type Selection -->
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="wrap_content"
+            <!-- Independent record options -->
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/check_detailed_time"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="@string/record_type"
-                android:textAppearance="?attr/textAppearanceTitleSmall" />
+                android:text="@string/record_detailed_time" />
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
-                android:id="@+id/toggle_record_type"
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/check_numeric_value"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:checkedButton="@id/btn_type_boolean"
-                app:selectionRequired="true"
-                app:singleSelection="true">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_type_boolean"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/type_boolean"
-                    style="@style/Widget.Material3.Button.OutlinedButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_type_numeric"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/type_numeric"
-                    style="@style/Widget.Material3.Button.OutlinedButton" />
-
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+                android:text="@string/record_numeric_value" />
 
             <!-- Unit (shown only for numeric type) -->
             <com.google.android.material.textfield.TextInputLayout

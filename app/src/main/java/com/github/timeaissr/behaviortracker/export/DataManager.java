@@ -96,6 +96,13 @@ public class DataManager {
                 return false;
             }
 
+            // Earlier backups always offered hour/minute selection.
+            if (importedData.getVersion() < 3) {
+                for (Behavior behavior : importedData.getBehaviors()) {
+                    behavior.setDetailedTime(true);
+                }
+            }
+
             // Clear existing data and insert imported data within a transaction
             db.runInTransaction(() -> {
                 // Clear tables

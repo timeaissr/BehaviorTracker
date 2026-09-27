@@ -48,7 +48,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="记录时间"
+        android:text="@string/record_date"
         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
     <com.google.android.material.button.MaterialButton
@@ -56,7 +56,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="选择日期和时间"
+        android:text="@string/pick_date_time"
         style="@style/Widget.Material3.Button.OutlinedButton" />
 
 </LinearLayout>

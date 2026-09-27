@@ -46,6 +46,7 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     private LiveData<List<Record>> recordsSource;
     private LiveData<List<Record>> chartSource;
     private LiveData<DetailViewModel.StatsData> statsSource;
+    private RecordType statsRecordType;
 
     private long behaviorId;
     private Behavior currentBehavior;
@@ -122,9 +123,13 @@ public class BehaviorDetailActivity extends AppCompatActivity {
         
         com.google.android.material.button.MaterialButton btnPickDatetime = 
                 dialogView.findViewById(R.id.btn_pick_datetime);
-        final long[] selectedTimestamp = {System.currentTimeMillis()};
+        final long[] selectedTimestamp = {currentBehavior.isDetailedTime()
+                ? System.currentTimeMillis() : DateUtils.getStartOfDay()};
         
-        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(selectedTimestamp, btnPickDatetime));
+        btnPickDatetime.setText(currentBehavior.isDetailedTime()
+                ? R.string.pick_date_time : R.string.pick_date);
+        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(
+                selectedTimestamp, btnPickDatetime, currentBehavior.isDetailedTime()));
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(currentBehavior.getName())
@@ -163,9 +168,13 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                 dialogView.findViewById(R.id.btn_pick_datetime);
 
         String unit = currentBehavior.getUnit() != null ? " (" + currentBehavior.getUnit() + ")" : "";
-        final long[] selectedTimestamp = {System.currentTimeMillis()};
+        final long[] selectedTimestamp = {currentBehavior.isDetailedTime()
+                ? System.currentTimeMillis() : DateUtils.getStartOfDay()};
         
-        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(selectedTimestamp, btnPickDatetime));
+        btnPickDatetime.setText(currentBehavior.isDetailedTime()
+                ? R.string.pick_date_time : R.string.pick_date);
+        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(
+                selectedTimestamp, btnPickDatetime, currentBehavior.isDetailedTime()));
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(currentBehavior.getName() + unit)
@@ -213,7 +222,8 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     }
 
     private void showDateTimePicker(final long[] timestampHolder, 
-            com.google.android.material.button.MaterialButton button) {
+            com.google.android.material.button.MaterialButton button,
+            boolean detailedTime) {
         // Show date picker first
         com.google.android.material.datepicker.MaterialDatePicker<Long> datePicker = 
                 com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
@@ -222,6 +232,19 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
+            if (!detailedTime) {
+                java.util.Calendar selectedDateUtc = java.util.Calendar.getInstance(
+                        TimeZone.getTimeZone("UTC"));
+                selectedDateUtc.setTimeInMillis(selection);
+                java.util.Calendar localDate = java.util.Calendar.getInstance();
+                localDate.clear();
+                localDate.set(selectedDateUtc.get(java.util.Calendar.YEAR),
+                        selectedDateUtc.get(java.util.Calendar.MONTH),
+                        selectedDateUtc.get(java.util.Calendar.DAY_OF_MONTH));
+                timestampHolder[0] = localDate.getTimeInMillis();
+                button.setText(DateUtils.formatDate(timestampHolder[0]));
+                return;
+            }
             // After date is selected, show time picker
             java.util.Calendar selectedDateUtc = java.util.Calendar.getInstance(
                     TimeZone.getTimeZone("UTC"));
@@ -278,7 +301,8 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(Behavior behavior) {
-        recordAdapter = new RecordAdapter(behavior.getRecordType(), behavior.getUnit(),
+        recordAdapter = new RecordAdapter(behavior.getRecordType(), behavior.isDetailedTime(),
+                behavior.getUnit(),
                 record -> showDeleteRecordDialog(record));
         binding.recyclerHistory.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerHistory.setAdapter(recordAdapter);
@@ -298,7 +322,9 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     }
 
     private void loadStats(Behavior behavior) {
-        if (statsSource != null) return;
+        if (statsSource != null && statsRecordType == behavior.getRecordType()) return;
+        if (statsSource != null) statsSource.removeObservers(this);
+        statsRecordType = behavior.getRecordType();
         boolean isBoolean = behavior.getRecordType() == RecordType.BOOLEAN;
         statsSource = viewModel.calculateStats(behaviorId, isBoolean);
         statsSource.observe(this, stats -> {

@@ -38,6 +38,12 @@ public final class BackupValidator {
                     || !hasValue(behavior, "archived")) {
                 return false;
             }
+            if (root.get("version").getAsInt() >= 3
+                    && (!hasValue(behavior, "detailedTime")
+                    || !behavior.get("detailedTime").isJsonPrimitive()
+                    || !behavior.get("detailedTime").getAsJsonPrimitive().isBoolean())) {
+                return false;
+            }
         }
 
         if (!root.has("records") || !root.get("records").isJsonArray()) {
@@ -61,7 +67,7 @@ public final class BackupValidator {
     }
 
     public static boolean isValid(ExportData data) {
-        if (data == null || data.getVersion() < 1 || data.getVersion() > 2
+        if (data == null || data.getVersion() < 1 || data.getVersion() > 3
                 || data.getBehaviors() == null) {
             return false;
         }

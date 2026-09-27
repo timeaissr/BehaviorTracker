@@ -18,6 +18,7 @@ import com.github.timeaissr.behaviortracker.util.DateUtils;
 public class RecordAdapter extends ListAdapter<Record, RecordAdapter.ViewHolder> {
 
     private final RecordType recordType;
+    private final boolean detailedTime;
     private final String unit;
     private OnRecordLongClickListener longClickListener;
 
@@ -25,9 +26,11 @@ public class RecordAdapter extends ListAdapter<Record, RecordAdapter.ViewHolder>
         void onRecordLongClick(Record record);
     }
 
-    public RecordAdapter(RecordType recordType, String unit, OnRecordLongClickListener listener) {
+    public RecordAdapter(RecordType recordType, boolean detailedTime, String unit,
+                         OnRecordLongClickListener listener) {
         super(DIFF_CALLBACK);
         this.recordType = recordType;
+        this.detailedTime = detailedTime;
         this.unit = unit;
         this.longClickListener = listener;
     }
@@ -74,7 +77,8 @@ public class RecordAdapter extends ListAdapter<Record, RecordAdapter.ViewHolder>
         }
 
         void bind(Record record) {
-            textDate.setText(DateUtils.formatDateTime(record.getTimestamp()));
+            textDate.setText(detailedTime ? DateUtils.formatDateTime(record.getTimestamp())
+                    : DateUtils.formatDate(record.getTimestamp()));
 
             if (record.getNote() != null && !record.getNote().isEmpty()) {
                 textNote.setVisibility(View.VISIBLE);

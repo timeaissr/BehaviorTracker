@@ -57,6 +57,8 @@ Pull Request 应说明：
 
 合并前必须确认 Actions 通过，审查意见已处理，相关 APK 已按风险完成真机测试。
 
+准备正式发布的 PR 必须包含 `app/build.gradle` 的版本号更新：按变更范围递增 `versionName`（新功能升 MINOR，修复升 PATCH，不兼容变化升 MAJOR），并将 `versionCode` 增至高于所有历史正式版本的整数。PR 说明必须写明两个版本号的更新前后值；不能仅凭 Actions 通过就合并发布，也不能等用户提醒才补版本号。版本更新提交后须确认最新提交的 Actions 通过。
+
 ## 禁止提交的内容
 
 不得提交或公开：

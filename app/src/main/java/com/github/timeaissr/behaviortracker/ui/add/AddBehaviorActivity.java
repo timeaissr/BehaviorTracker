@@ -23,7 +23,6 @@ public class AddBehaviorActivity extends AppCompatActivity {
     private ColorPickerAdapter colorAdapter;
 
     private String selectedColor;
-    private RecordType selectedRecordType = RecordType.BOOLEAN;
 
     private static final String[] AVAILABLE_COLORS = {
             "#E57373", "#F06292", "#BA68C8", "#64B5F6",
@@ -41,7 +40,7 @@ public class AddBehaviorActivity extends AppCompatActivity {
         selectedColor = AVAILABLE_COLORS[0];
 
         setupToolbar();
-        setupRecordTypeToggle();
+        setupRecordOptions();
         setupColorPicker();
         setupSaveButton();
         setupDeleteButton();
@@ -53,10 +52,9 @@ public class AddBehaviorActivity extends AppCompatActivity {
             binding.toolbar.setTitle(R.string.edit_behavior);
             binding.btnDelete.setVisibility(View.VISIBLE);
             binding.btnSave.setEnabled(false);
-            // Existing records depend on their behavior type; changing it would reinterpret data.
-            binding.btnTypeBoolean.setEnabled(false);
-            binding.btnTypeNumeric.setEnabled(false);
             loadExistingBehavior(behaviorId);
+            viewModel.getRecords(behaviorId).observe(this, records ->
+                    binding.checkNumericValue.setEnabled(records == null || records.isEmpty()));
         }
 
         // Observe save
@@ -85,18 +83,9 @@ public class AddBehaviorActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
     }
 
-    private void setupRecordTypeToggle() {
-        binding.toggleRecordType.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (isChecked) {
-                if (checkedId == R.id.btn_type_boolean) {
-                    selectedRecordType = RecordType.BOOLEAN;
-                    binding.layoutUnit.setVisibility(View.GONE);
-                } else if (checkedId == R.id.btn_type_numeric) {
-                    selectedRecordType = RecordType.NUMERIC;
-                    binding.layoutUnit.setVisibility(View.VISIBLE);
-                }
-            }
-        });
+    private void setupRecordOptions() {
+        binding.checkNumericValue.setOnCheckedChangeListener((button, checked) ->
+                binding.layoutUnit.setVisibility(checked ? View.VISIBLE : View.GONE));
     }
 
     private void setupColorPicker() {
@@ -115,7 +104,7 @@ public class AddBehaviorActivity extends AppCompatActivity {
             }
             binding.layoutName.setError(null);
 
-            if (selectedRecordType == RecordType.NUMERIC) {
+            if (binding.checkNumericValue.isChecked()) {
                 String unit = binding.editUnit.getText().toString().trim();
                 if (unit.isEmpty()) {
                     binding.layoutUnit.setError(getString(R.string.error_empty_unit));
@@ -127,9 +116,11 @@ public class AddBehaviorActivity extends AppCompatActivity {
             // Build behavior
             Behavior behavior = new Behavior();
             behavior.setName(name);
-            behavior.setRecordType(selectedRecordType);
+            behavior.setRecordType(binding.checkNumericValue.isChecked()
+                    ? RecordType.NUMERIC : RecordType.BOOLEAN);
+            behavior.setDetailedTime(binding.checkDetailedTime.isChecked());
             behavior.setColor(selectedColor);
-            if (selectedRecordType == RecordType.NUMERIC) {
+            if (binding.checkNumericValue.isChecked()) {
                 behavior.setUnit(binding.editUnit.getText().toString().trim());
             }
 
@@ -157,12 +148,9 @@ public class AddBehaviorActivity extends AppCompatActivity {
 
             binding.editName.setText(behavior.getName());
 
-            if (behavior.getRecordType() == RecordType.NUMERIC) {
-                binding.toggleRecordType.check(R.id.btn_type_numeric);
-                binding.editUnit.setText(behavior.getUnit());
-            } else {
-                binding.toggleRecordType.check(R.id.btn_type_boolean);
-            }
+            binding.checkDetailedTime.setChecked(behavior.isDetailedTime());
+            binding.checkNumericValue.setChecked(behavior.getRecordType() == RecordType.NUMERIC);
+            binding.editUnit.setText(behavior.getUnit());
 
             if (behavior.getColor() != null) {
                 selectedColor = behavior.getColor();
