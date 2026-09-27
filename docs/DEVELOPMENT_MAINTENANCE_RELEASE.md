@@ -267,7 +267,15 @@ versionCode = 4
 
 所以下一个正式版本的 `versionCode` 至少是 `5`。
 
-版本号应在发布 Pull Request 中修改、审查并合并。不得等到创建标签时再由工作流临时改写版本号。
+准备正式发布的 Pull Request 必须包含 `app/build.gradle` 的版本号更新，并在合并前完成以下检查：
+
+1. 核对当前源码版本和所有历史正式 Release，确定本次发布的版本基线。
+2. 按变更范围递增 `versionName`：新功能升 MINOR，修复升 PATCH，不兼容变化升 MAJOR。
+3. 将 `versionCode` 增至高于所有历史正式版本的整数。
+4. 在 PR 说明中明确写出 `versionName` 和 `versionCode` 的更新前后值。
+5. 版本更新提交后，确认最新提交的 Actions 通过，不能沿用更新前提交的检查结果。
+
+开发者和自动化代理必须主动执行上述检查，不能仅凭 Actions 通过就合并发布，也不能等用户提醒才补版本号。版本号必须随 PR 审查并合并，不得等到创建标签时再由工作流临时改写。纯文档或不准备发布的改动无需单独增加应用版本号，但必须在实际发布 PR 中完成版本更新。
 
 ## 10. APK 签名
 
@@ -487,12 +495,13 @@ git branch -D <分支名>
 - [ ] Actions 全部通过
 - [ ] 审查意见已处理
 - [ ] Debug APK 已真机测试
-- [ ] 版本号和文档已按需更新
+- [ ] 准备发布的 PR 已更新 `app/build.gradle` 中的 `versionName` 和 `versionCode`，并在 PR 说明中列出更新前后值
+- [ ] 版本更新后的最新提交已通过 Actions，相关文档已同步更新
 
 ### 发布前
 
 - [ ] `main` 已同步且工作区干净
-- [ ] `versionName`、`versionCode` 正确
+- [ ] `versionName` 已按变更范围递增，`versionCode` 高于所有历史正式版本；两项更新均已通过 PR 合并
 - [ ] 从上一正式版本升级测试通过
 - [ ] 签名 secrets 和离线备份可用
 - [ ] Release notes 已准备
