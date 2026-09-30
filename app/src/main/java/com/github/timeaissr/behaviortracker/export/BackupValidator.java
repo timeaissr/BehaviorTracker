@@ -67,7 +67,7 @@ public final class BackupValidator {
     }
 
     public static boolean isValid(ExportData data) {
-        if (data == null || data.getVersion() < 1 || data.getVersion() > 3
+        if (data == null || data.getVersion() < 1 || data.getVersion() > 4
                 || data.getBehaviors() == null) {
             return false;
         }

@@ -16,7 +16,7 @@ public class ExportData {
     private List<Record> records;
 
     public ExportData() {
-        this.version = 3;
+        this.version = 4;
         this.exportTimestamp = System.currentTimeMillis();
     }
 

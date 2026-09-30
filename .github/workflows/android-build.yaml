@@ -56,9 +56,9 @@ jobs:
         if: steps.detect.outputs.docs_only != 'true'
         run: chmod +x gradlew
 
-      - name: Build debug APK
+      - name: Build debug and instrumentation test APKs
         if: steps.detect.outputs.docs_only != 'true'
-        run: ./gradlew --no-daemon assembleDebug
+        run: ./gradlew --no-daemon assembleDebug assembleDebugAndroidTest
 
       - name: Run unit tests
         if: steps.detect.outputs.docs_only != 'true'

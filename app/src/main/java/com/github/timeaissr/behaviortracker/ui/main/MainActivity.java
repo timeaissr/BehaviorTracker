@@ -137,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
         View dialogView = LayoutInflater.from(this)
                 .inflate(R.layout.dialog_numeric_input, null);
         EditText editValue = dialogView.findViewById(R.id.edit_value);
-        EditText editNote = dialogView.findViewById(R.id.edit_note);
         MaterialButton btnPickDatetime = dialogView.findViewById(R.id.btn_pick_datetime);
 
         String unit = behavior.getUnit() != null ? " (" + behavior.getUnit() + ")" : "";
@@ -169,10 +168,9 @@ public class MainActivity extends AppCompatActivity implements BehaviorAdapter.O
                         editValue.setError(getString(R.string.error_invalid_value));
                         return;
                     }
-                    String note = editNote.getText().toString().trim();
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     viewModel.quickLogNumeric(behavior.getId(), value,
-                            note.isEmpty() ? null : note, selectedTimestamp[0], success ->
+                            selectedTimestamp[0], success ->
                                     runOnUiThread(() -> {
                                         if (!canHandleAsyncResult()) return;
                                         Snackbar.make(binding.getRoot(),

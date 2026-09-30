@@ -163,7 +163,6 @@ public class BehaviorDetailActivity extends AppCompatActivity {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_numeric_input, null);
         
         android.widget.EditText editValue = dialogView.findViewById(R.id.edit_value);
-        android.widget.EditText editNote = dialogView.findViewById(R.id.edit_note);
         com.google.android.material.button.MaterialButton btnPickDatetime = 
                 dialogView.findViewById(R.id.btn_pick_datetime);
 
@@ -196,10 +195,9 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                         editValue.setError(getString(R.string.error_invalid_value));
                         return;
                     }
-                    String note = editNote.getText().toString().trim();
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     viewModel.insertNumericRecord(behaviorId, value,
-                            note.isEmpty() ? null : note, selectedTimestamp[0], success ->
+                            selectedTimestamp[0], success ->
                                     runOnUiThread(() -> {
                                         if (!canHandleAsyncResult()) return;
                                         com.google.android.material.snackbar.Snackbar.make(
