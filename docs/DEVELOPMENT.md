@@ -133,6 +133,30 @@ sdk.dir=/home/用户名/Android/Sdk
 
 仪器测试需要设备或模拟器；当前仓库只有 `app/src/test/` 下的单元测试，尚无 `app/src/androidTest/` 测试用例。重要逻辑修复应补充回归测试，不能只依赖人工验证。
 
-没有本地 Android SDK 时，按[贡献流程](../CONTRIBUTING.md#pull-requests)推送分支并创建 PR，等待 [Android Build](../.github/workflows/android-build.yaml) 完成，再下载 `app-debug-apk` artifact 进行真机验证。该工作流在面向 `main` 的 PR、`main` 推送及手动触发时运行。
+修改应用时，如果本地没有 Android SDK，可按[贡献流程](../CONTRIBUTING.md#pull-requests)推送分支并创建 PR，等待 [Android Build](../.github/workflows/android-build.yaml) 完成，再下载 `app-debug-apk` artifact 进行真机验证。触发条件和变更分类见下文的 [CI 与文档检查](#ci-documentation)。
 
-CI 通过不能替代真机验证，尤其是数据库迁移、权限、主题切换、文件导入导出和升级安装。Debug 与正式版切换测试的安装要求见[签名与升级](MAINTENANCE_RELEASE.md#signing)。纯文档修改检查相对链接、章节引用和 `git diff --check` 即可，无需构建 APK。
+CI 通过不能替代真机验证，尤其是数据库迁移、权限、主题切换、文件导入导出和升级安装。Debug 与正式版切换测试的安装要求见[签名与升级](MAINTENANCE_RELEASE.md#signing)。
+
+<a id="ci-documentation"></a>
+
+### CI 与文档检查
+
+[Android Build](../.github/workflows/android-build.yaml) 在面向 `main` 的 PR、`main` 推送及手动触发时运行，保留同一个 `build` 检查名。
+
+- PR 检查从共同祖先到 PR 最新提交的完整差异；`main` 推送检查推送前后提交的完整差异，使用相同的文件分类规则。
+- 只有 `.md`、`.markdown` 或 `docs/` 下文件变化时，只执行文档检查，跳过 APK 构建、应用单元测试和 artifact 上传。`app/`、`gradle/`、`.github/`、`scripts/` 下的变更始终执行完整构建；其他不在文档范围内的文件（包括构建和依赖配置）也执行完整构建。
+- 混合变更、空差异或无法确认变更范围时执行完整构建。手动触发始终执行完整构建。
+- 每次运行都检查差异的空白格式，以及仓库 Markdown 中的本地文件链接和章节锚点；外部网址不做联网检查。
+
+纯文档修改无需构建 APK，本地执行：
+
+```bash
+python3 .github/scripts/check_docs.py
+git diff --check
+```
+
+修改 CI 检查脚本时，执行其回归测试；完整构建路径也会执行这些测试：
+
+```bash
+python3 -m unittest discover -s .github/scripts/tests -v
+```

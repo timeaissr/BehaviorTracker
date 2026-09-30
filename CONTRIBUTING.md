@@ -77,7 +77,7 @@ PR 说明应包含修改内容、原因、验证方法及结果、数据库迁�
 
 - [ ] 修改范围单一，没有无关文件或禁止提交的内容。
 - [ ] 最新提交的 Android Build 工作流通过，审查意见已处理或明确说明不采纳原因。
-- [ ] 相关 APK 已按[验证要求](docs/DEVELOPMENT.md#validation)完成真机测试。
+- [ ] 涉及应用的修改已按[验证要求](docs/DEVELOPMENT.md#validation)完成相关 APK 的真机测试；纯文档修改通过[文档检查](docs/DEVELOPMENT.md#ci-documentation)。
 - [ ] 需要的版本更新和对应文档已同步。
 - [ ] 本次不处理的问题已记录到 Issue、待办事项或[技术债](docs/MAINTENANCE_RELEASE.md#known-issues)。
 
