@@ -186,7 +186,7 @@ ci: 校验发布 APK 签名
 
 ### 7.1 本地最低验证
 
-在项目根目录运行：
+应用代码修改的最低验证，在项目根目录运行：
 
 ```bash
 ./gradlew --no-daemon assembleDebug
@@ -215,6 +215,30 @@ git diff --check
 
 CI 构建通过不能代替真机验证，特别是数据库迁移、系统权限、主题切换、文件导入导出和升级安装。
 
+<a id="ci-documentation"></a>
+
+### 7.3 CI 与文档检查
+
+[Android Build](../.github/workflows/android-build.yaml) 在面向 `main` 的 PR、`main` 推送及手动触发时运行，保留同一个 `build` 检查名。
+
+- PR 检查从共同祖先到 PR 最新提交的完整差异；`main` 推送检查推送前后提交的完整差异，使用相同的文件分类规则。
+- 只有 `.md`、`.markdown` 或 `docs/` 下文件变化时，只执行文档检查，跳过 APK 构建、应用单元测试和 artifact 上传。`app/`、`gradle/`、`.github/`、`scripts/` 下的变更始终执行完整构建；其他不在文档范围内的文件（包括构建和依赖配置）也执行完整构建。
+- 混合变更、空差异或无法确认变更范围时执行完整构建。手动触发始终执行完整构建。
+- 每次运行都检查差异的空白格式，以及仓库 Markdown 中的本地文件链接和章节锚点；外部网址不做联网检查。
+
+纯文档修改无需构建 APK，本地执行：
+
+```bash
+python3 .github/scripts/check_docs.py
+git diff --check
+```
+
+修改 CI 检查脚本时，执行其回归测试；完整构建路径也会执行这些测试：
+
+```bash
+python3 -m unittest discover -s .github/scripts/tests -v
+```
+
 ## 8. Pull Request 流程
 
 推送工作分支：
@@ -235,7 +259,7 @@ Pull Request 至少说明：
 
 1. Android Build 工作流通过。
 2. 代码审查意见已处理或明确说明不采纳原因。
-3. 相关 Debug APK 已完成真机测试。
+3. 涉及应用的修改已完成相关 Debug APK 的真机测试；纯文档修改通过文档检查。
 4. 没有秘密信息和无关文件。
 5. 版本和文档在需要时已经同步更新。
 
@@ -485,7 +509,7 @@ git branch -D <分支名>
 - [ ] 工作位于独立分支
 - [ ] 修改范围单一
 - [ ] 数据库和备份兼容性已考虑
-- [ ] Debug 构建和单元测试通过
+- [ ] 应用代码修改通过 Debug 构建和单元测试；纯文档修改通过文档检查
 - [ ] `git diff --check` 通过
 - [ ] 没有秘密信息或构建产物
 
@@ -494,7 +518,7 @@ git branch -D <分支名>
 - [ ] 说明包含修改、原因和验证方式
 - [ ] Actions 全部通过
 - [ ] 审查意见已处理
-- [ ] Debug APK 已真机测试
+- [ ] 涉及应用的修改已完成 Debug APK 真机测试；纯文档修改通过文档检查
 - [ ] 准备发布的 PR 已更新 `app/build.gradle` 中的 `versionName` 和 `versionCode`，并在 PR 说明中列出更新前后值
 - [ ] 版本更新后的最新提交已通过 Actions，相关文档已同步更新
 

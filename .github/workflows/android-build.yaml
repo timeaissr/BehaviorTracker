@@ -19,8 +19,33 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files
+        id: detect
+        run: python3 .github/scripts/detect_changes.py
+
+      - name: Check whitespace
+        env:
+          BASE_SHA: ${{ steps.detect.outputs.base_sha }}
+          HEAD_SHA: ${{ steps.detect.outputs.head_sha }}
+        run: |
+          if [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
+            git diff --check "$BASE_SHA" "$HEAD_SHA"
+          else
+            git show --format= --check HEAD
+          fi
+
+      - name: Check Markdown links and anchors
+        run: python3 .github/scripts/check_docs.py
+
+      - name: Test CI helpers
+        if: steps.detect.outputs.docs_only != 'true'
+        run: python3 -m unittest discover -s .github/scripts/tests -v
 
       - name: Set up JDK 21
+        if: steps.detect.outputs.docs_only != 'true'
         uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -28,16 +53,19 @@ jobs:
           cache: gradle
 
       - name: Make Gradle wrapper executable
+        if: steps.detect.outputs.docs_only != 'true'
         run: chmod +x gradlew
 
       - name: Build debug APK
+        if: steps.detect.outputs.docs_only != 'true'
         run: ./gradlew --no-daemon assembleDebug
 
       - name: Run unit tests
+        if: steps.detect.outputs.docs_only != 'true'
         run: ./gradlew --no-daemon testDebugUnitTest
 
       - name: Upload debug APK
-        if: success()
+        if: success() && steps.detect.outputs.docs_only != 'true'
         uses: actions/upload-artifact@v6
         with:
           name: app-debug-apk
