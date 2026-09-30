@@ -1,75 +1,93 @@
-# Behavior Tracker 贡献指南
+# 贡献指南
 
-感谢参与 Behavior Tracker 的开发和维护。完整的开发、测试、数据库、版本、签名和发布规则，请先阅读 [开发、维护与发布标准流程](docs/DEVELOPMENT_MAINTENANCE_RELEASE.md)。该文档是本项目流程的权威说明。
+本文负责开发协作规则。技术实现和验证方法见[开发指南](docs/DEVELOPMENT.md)，正式交付见[维护与发布手册](docs/MAINTENANCE_RELEASE.md)。完整文档入口见 [README](README.md#文档导航)。
 
-## 基本流程
+## Git 身份与凭据
 
-1. 从最新的 `main` 创建独立分支。
-2. 完成单一主题的修改和测试。
-3. 使用清晰的提交信息提交。
-4. 推送分支并创建 Pull Request。
-5. 等待 Actions、代码审查和真机验证通过后合并。
+提交身份决定作者信息，登录凭据负责向 GitHub 认证。每位贡献者应配置自己的身份：
+
+```bash
+git config user.name '<你的 Git 提交用户名>'
+git config user.email '<你的 Git 提交邮箱>'
+git config credential.username '<你的 GitHub 用户名>'
+```
+
+使用 `git config --get <配置项>` 检查上述配置及 `credential.helper`。Linux 桌面可通过 Git Credential Manager、libsecret 或 KWallet 保存凭据。推送使用仓库已有的 credential helper；GitHub CLI 用于 API 操作，不应擅自替换 Git 的凭据配置。
+
+## 分支与变更范围
+
+`main` 应保持可构建、可测试、可发布。修改通过独立分支和 Pull Request 合并。工作区干净时，从最新的 `main` 开始：
 
 ```bash
 git switch main
 git pull --ff-only origin main
 git switch -c <分支名>
-
-./gradlew --no-daemon assembleDebug
-./gradlew --no-daemon testDebugUnitTest
-git diff --check
-
-git push -u origin <分支名>
 ```
 
-## 分支命名
+一个分支只处理一个明确主题。编码前确定用户可见的预期行为、需保留的现有行为、验证成功的条件，以及是否涉及数据库、备份、版本号、权限、后台任务或签名。
 
-- `feat/`：新功能
-- `fix/`：问题修复
-- `docs/`：文档
-- `refactor/`：重构
-- `test/`：测试
-- `chore/`：维护
-- `ci/`：持续集成和发布工作流
-- `codex/`：由 Codex 创建的工作分支
+| 前缀 | 用途 |
+| --- | --- |
+| `feat/` | 新功能 |
+| `fix/` | 问题修复 |
+| `docs/` | 文档 |
+| `refactor/` | 不改变外部行为的重构 |
+| `test/` | 测试 |
+| `chore/` | 日常维护 |
+| `ci/` | 持续集成与发布工作流 |
+| `codex/` | Codex 创建的工作分支 |
 
-## 提交信息
+## 提交要求
 
-使用 `<类型>: <中文说明>` 的形式，例如：
+提交信息使用 `<类型>: <中文说明>`，常用类型为 `feat`、`fix`、`docs`、`refactor`、`test`、`chore`、`ci`：
 
 ```text
 fix: 修复导入校验失败后数据被修改的问题
 feat: 增加备份导入预览
 docs: 更新发布流程
-ci: 增加 APK 签名校验
 ```
 
-常用类型包括 `feat`、`fix`、`docs`、`refactor`、`test`、`chore` 和 `ci`。
+提交前完成[构建与验证](docs/DEVELOPMENT.md#validation)，检查修改范围并执行：
 
-## Pull Request 要求
+```bash
+git diff --check
+```
 
-Pull Request 应说明：
+不得提交或公开以下内容：
 
-- 修改内容和原因。
-- 验证方法及结果。
-- 是否涉及数据库迁移、备份格式或版本号。
-- 已知限制和暂不处理的问题。
+- keystore、签名密码、访问令牌。
+- `secrets.properties`、`local.properties` 和其他本机配置。
+- APK、构建目录和含真实用户数据的备份。
 
-合并前必须确认 Actions 通过，审查意见已处理，相关 APK 已按风险完成真机测试。
+文档示例使用占位符，不写入个人真实用户名、邮箱或凭据。
 
-准备正式发布的 PR 必须包含 `app/build.gradle` 的版本号更新：按变更范围递增 `versionName`（新功能升 MINOR，修复升 PATCH，不兼容变化升 MAJOR），并将 `versionCode` 增至高于所有历史正式版本的整数。PR 说明必须写明两个版本号的更新前后值；不能仅凭 Actions 通过就合并发布，也不能等用户提醒才补版本号。版本更新提交后须确认最新提交的 Actions 通过。
+<a id="pull-requests"></a>
 
-## 禁止提交的内容
+## Pull Request 与合并
 
-不得提交或公开：
+推送工作分支后创建 PR：
 
-- keystore、签名密码和访问令牌。
-- `secrets.properties`、`local.properties`。
-- APK、构建目录和本机配置。
-- 备份中包含的真实用户数据。
+```bash
+git push -u origin <分支名>
+```
 
-## 正式发布
+PR 说明应包含修改内容、原因、验证方法及结果、数据库迁移或备份格式变化，以及已知限制。准备正式发布时，先完成[发布 PR 的版本要求](docs/MAINTENANCE_RELEASE.md#versioning)。
 
-正式发布由维护者执行。版本号必须先在 `app/build.gradle` 中更新，通过 Pull Request 审查并合并，再创建对应的 `vX.Y.Z` 标签。发布工作流只校验和构建版本，不在构建时修改源码版本号。
+合并前检查：
 
-详细检查清单、签名保管要求、标签命令和 Release 验证步骤见 [开发、维护与发布标准流程](docs/DEVELOPMENT_MAINTENANCE_RELEASE.md)。
+- [ ] 修改范围单一，没有无关文件或禁止提交的内容。
+- [ ] 最新提交的 Android Build 工作流通过，审查意见已处理或明确说明不采纳原因。
+- [ ] 相关 APK 已按[验证要求](docs/DEVELOPMENT.md#validation)完成真机测试。
+- [ ] 需要的版本更新和对应文档已同步。
+- [ ] 本次不处理的问题已记录到 Issue、待办事项或[技术债](docs/MAINTENANCE_RELEASE.md#known-issues)。
+
+推荐使用 **Squash and merge**。合并标题概括用户可见结果，Extended description 总结主要变化，避免直接堆叠临时提交信息。
+
+合并后同步本地仓库，并确认 `main` 的 Actions 成功：
+
+```bash
+git switch main
+git pull --ff-only origin main
+```
+
+功能分支按[分支清理规则](docs/MAINTENANCE_RELEASE.md#branch-cleanup)处理。
