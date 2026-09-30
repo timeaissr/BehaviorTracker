@@ -53,34 +53,22 @@
 
         </LinearLayout>
 
-        <!-- Quick log button for boolean type -->
+        <!-- Quick log button showing today's record count for either type -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_quick_log_boolean"
-            android:layout_width="48dp"
+            android:id="@+id/btn_quick_log"
+            android:layout_width="wrap_content"
             android:layout_height="48dp"
-            android:checkable="true"
+            android:minWidth="48dp"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:singleLine="true"
+            android:text="@string/today_no_records_symbol"
+            android:textColor="?attr/colorOnSecondaryContainer"
+            android:textSize="20sp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:visibility="gone"
             app:cornerRadius="24dp"
-            app:icon="@android:drawable/checkbox_off_background"
-            app:iconTint="@null"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal" />
-
-        <!-- Quick log button for numeric type -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_quick_log_numeric"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:visibility="gone"
-            app:cornerRadius="24dp"
-            app:icon="@android:drawable/ic_input_add"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal" />
 
     </LinearLayout>
