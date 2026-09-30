@@ -13,6 +13,8 @@
     <string name="logged_today">今日已记录</string>
     <string name="not_logged_today">今日未记录</string>
     <string name="today_value">今日：%1$.1f %2$s</string>
+    <string name="today_no_records_symbol" translatable="false">×</string>
+    <string name="quick_log_today_count">%1$s，今日记录 %2$d 次，点击新增记录</string>
 
     <!-- Add/Edit Behavior -->
     <string name="edit_behavior">编辑行为</string>

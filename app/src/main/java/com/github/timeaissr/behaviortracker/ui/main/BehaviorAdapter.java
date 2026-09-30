@@ -87,8 +87,7 @@ public class BehaviorAdapter extends ListAdapter<Behavior, BehaviorAdapter.ViewH
         private final View colorIndicator;
         private final TextView textName;
         private final TextView textStatus;
-        private final MaterialButton btnBooleanLog;
-        private final MaterialButton btnNumericLog;
+        private final MaterialButton btnQuickLog;
         private LiveData<Integer> countSource;
         private Observer<Integer> countObserver;
         private LiveData<Double> sumSource;
@@ -103,15 +102,17 @@ public class BehaviorAdapter extends ListAdapter<Behavior, BehaviorAdapter.ViewH
             colorIndicator = itemView.findViewById(R.id.view_color_indicator);
             textName = itemView.findViewById(R.id.text_behavior_name);
             textStatus = itemView.findViewById(R.id.text_behavior_status);
-            btnBooleanLog = itemView.findViewById(R.id.btn_quick_log_boolean);
-            btnNumericLog = itemView.findViewById(R.id.btn_quick_log_numeric);
+            btnQuickLog = itemView.findViewById(R.id.btn_quick_log);
         }
 
         void bind(Behavior behavior) {
             clearObservers();
             boundBehaviorId = behavior.getId();
+            todayCount = 0;
+            todaySum = 0;
             textName.setText(behavior.getName());
             textStatus.setText(itemView.getContext().getString(R.string.not_logged_today));
+            updateQuickLogButton(behavior);
 
             // Set color indicator
             colorIndicator.setBackgroundColor(Color.TRANSPARENT);
@@ -123,53 +124,29 @@ public class BehaviorAdapter extends ListAdapter<Behavior, BehaviorAdapter.ViewH
                 }
             }
 
-            // Show appropriate quick-log button
-            if (behavior.getRecordType() == RecordType.BOOLEAN) {
-                btnBooleanLog.setVisibility(View.VISIBLE);
-                btnNumericLog.setVisibility(View.GONE);
-
-                // Observe today's status
-                long dayStart = DateUtils.getStartOfDay();
-                long dayEnd = DateUtils.getEndOfDay();
-                countSource = viewModel.getRecordCountForDay(
-                        behavior.getId(), dayStart, dayEnd);
-                countObserver = count -> {
-                    if (boundBehaviorId == behavior.getId()) {
-                        boolean loggedToday = count != null && count > 0;
-                        textStatus.setText(loggedToday
+            // Both types show today's record count on the quick-log button.
+            long now = System.currentTimeMillis();
+            long dayStart = DateUtils.getStartOfDay(now);
+            long dayEnd = DateUtils.getEndOfDay(now);
+            countSource = viewModel.getRecordCountForDay(
+                    behavior.getId(), dayStart, dayEnd);
+            countObserver = count -> {
+                if (boundBehaviorId == behavior.getId()) {
+                    todayCount = count == null ? 0 : count;
+                    updateQuickLogButton(behavior);
+                    if (behavior.getRecordType() == RecordType.BOOLEAN) {
+                        textStatus.setText(todayCount > 0
                                 ? itemView.getContext().getString(R.string.logged_today)
                                 : itemView.getContext().getString(R.string.not_logged_today));
-                        // Update button appearance based on logged state
-                        btnBooleanLog.setIconResource(loggedToday
-                                ? android.R.drawable.checkbox_on_background
-                                : android.R.drawable.checkbox_off_background);
-                    }
-                };
-                countSource.observe(lifecycleOwner, countObserver);
-
-                btnBooleanLog.setOnClickListener(v -> {
-                    if (listener != null) {
-                        listener.onBooleanLogClick(behavior);
-                    }
-                });
-
-            } else {
-                btnBooleanLog.setVisibility(View.GONE);
-                btnNumericLog.setVisibility(View.VISIBLE);
-
-                // Show today's sum for numeric type
-                long dayStart = DateUtils.getStartOfDay();
-                long dayEnd = DateUtils.getEndOfDay();
-                todayCount = 0;
-                todaySum = 0;
-                countSource = viewModel.getRecordCountForDay(
-                        behavior.getId(), dayStart, dayEnd);
-                countObserver = count -> {
-                    if (boundBehaviorId == behavior.getId()) {
-                        todayCount = count == null ? 0 : count;
+                    } else {
                         updateNumericStatus(behavior);
                     }
-                };
+                }
+            };
+            countSource.observe(lifecycleOwner, countObserver);
+
+            if (behavior.getRecordType() == RecordType.NUMERIC) {
+                // Numeric types also show today's sum below the behavior name.
                 sumSource = viewModel.getSumInRange(behavior.getId(), dayStart, dayEnd);
                 sumObserver = sum -> {
                     if (boundBehaviorId == behavior.getId()) {
@@ -177,15 +154,18 @@ public class BehaviorAdapter extends ListAdapter<Behavior, BehaviorAdapter.ViewH
                         updateNumericStatus(behavior);
                     }
                 };
-                countSource.observe(lifecycleOwner, countObserver);
                 sumSource.observe(lifecycleOwner, sumObserver);
+            }
 
-                btnNumericLog.setOnClickListener(v -> {
-                    if (listener != null) {
+            btnQuickLog.setOnClickListener(v -> {
+                if (listener != null) {
+                    if (behavior.getRecordType() == RecordType.BOOLEAN) {
+                        listener.onBooleanLogClick(behavior);
+                    } else {
                         listener.onNumericLogClick(behavior);
                     }
-                });
-            }
+                }
+            });
 
             // Card click -> detail
             card.setOnClickListener(v -> {
@@ -193,6 +173,14 @@ public class BehaviorAdapter extends ListAdapter<Behavior, BehaviorAdapter.ViewH
                     listener.onBehaviorClick(behavior);
                 }
             });
+        }
+
+        private void updateQuickLogButton(Behavior behavior) {
+            btnQuickLog.setText(todayCount > 0
+                    ? Integer.toString(todayCount)
+                    : itemView.getContext().getString(R.string.today_no_records_symbol));
+            btnQuickLog.setContentDescription(itemView.getContext().getString(
+                    R.string.quick_log_today_count, behavior.getName(), todayCount));
         }
 
         private void updateNumericStatus(Behavior behavior) {
