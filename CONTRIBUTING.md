@@ -8,7 +8,7 @@
 2. 完成单一主题的修改和测试。
 3. 使用清晰的提交信息提交。
 4. 推送分支并创建 Pull Request。
-5. 等待 Actions、代码审查和真机验证通过后合并。
+5. 等待 Actions 和代码审查通过后合并；涉及应用的修改按风险完成真机验证。
 
 ```bash
 git switch main
@@ -55,7 +55,7 @@ Pull Request 应说明：
 - 是否涉及数据库迁移、备份格式或版本号。
 - 已知限制和暂不处理的问题。
 
-合并前必须确认 Actions 通过，审查意见已处理，相关 APK 已按风险完成真机测试。
+合并前必须确认 Actions 通过，审查意见已处理。涉及应用的修改需将相关 APK 按风险完成真机测试；纯文档修改只需通过[文档检查](docs/DEVELOPMENT_MAINTENANCE_RELEASE.md#ci-documentation)。
 
 准备正式发布的 PR 必须包含 `app/build.gradle` 的版本号更新：按变更范围递增 `versionName`（新功能升 MINOR，修复升 PATCH，不兼容变化升 MAJOR），并将 `versionCode` 增至高于所有历史正式版本的整数。PR 说明必须写明两个版本号的更新前后值；不能仅凭 Actions 通过就合并发布，也不能等用户提醒才补版本号。版本更新提交后须确认最新提交的 Actions 通过。
 
