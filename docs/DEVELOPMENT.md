@@ -41,7 +41,7 @@ sdk.dir=/home/用户名/Android/Sdk
 
 ## 数据模型与兼容性
 
-数据库名为 `behavior_tracker.db`，当前 schema version 为 **3**；定义和迁移以 [AppDatabase.java](../app/src/main/java/com/github/timeaissr/behaviortracker/data/AppDatabase.java) 为准。
+数据库名为 `behavior_tracker.db`，当前 schema version 为 **4**；定义和迁移以 [AppDatabase.java](../app/src/main/java/com/github/timeaissr/behaviortracker/data/AppDatabase.java) 为准。
 
 ### 行为与记录
 
@@ -66,7 +66,6 @@ sdk.dir=/home/用户名/Android/Sdk
 | `behaviorId` | long | 指向行为的外键，删除行为时级联删除记录 |
 | `timestamp` | long | 记录时间戳 |
 | `value` | double | 数值；布尔型固定为 1.0 |
-| `note` | String | 备注，可空 |
 
 记录表在 `behaviorId` 和 `timestamp` 上建立索引。两种记录类型均允许同一天添加多条记录，不得重新引入一天一条的限制。
 
@@ -74,13 +73,13 @@ sdk.dir=/home/用户名/Android/Sdk
 
 修改表结构时必须增加 schema version，编写明确、可重复执行的 Migration，保留原有数据和可见性语义，同时验证全新安装与从上一正式版本升级。禁止使用破坏性迁移替代正式迁移。
 
-现有迁移包括：1 → 2 清理旧提醒并移除提醒表及旧图标字段；2 → 3 增加 `detailedTime`，默认开启以保留旧记录的时间语义。
+现有迁移包括：1 → 2 清理旧提醒并移除提醒表及旧图标字段；2 → 3 增加 `detailedTime`，默认开启以保留旧记录的时间语义；3 → 4 移除记录备注，清除历史备注内容，保留记录 ID、自增序列、所属行为、时间、数值、索引和外键约束。
 
 ### 备份与导入
 
-备份格式由 [ExportData.java](../app/src/main/java/com/github/timeaissr/behaviortracker/export/ExportData.java) 定义，当前格式版本为 **3**，包含版本、导出时间、行为列表和记录列表。该版本独立于数据库 schema 管理。
+备份格式由 [ExportData.java](../app/src/main/java/com/github/timeaissr/behaviortracker/export/ExportData.java) 定义，当前格式版本为 **4**，包含版本、导出时间、行为列表和记录列表，不再导出备注字段。该版本独立于数据库 schema 管理。
 
-[DataManager.java](../app/src/main/java/com/github/timeaissr/behaviortracker/export/DataManager.java) 使用 SAF 读写 JSON。导入前完成格式与必填数据校验，校验成功后才进入事务，使用备份中的完整数据替换现有数据。旧格式备份导入时开启 `detailedTime`，保留旧版本的时间语义。
+[DataManager.java](../app/src/main/java/com/github/timeaissr/behaviortracker/export/DataManager.java) 使用 SAF 读写 JSON。导入前完成格式与必填数据校验，校验成功后才进入事务，使用备份中的行为和记录替换现有数据。版本 1、2 的备份导入时开启 `detailedTime`，保留旧版本的时间语义；版本 1～3 的备份仍可导入，但其中的备注会被忽略。
 
 修改格式需维护兼容性测试；若改为增量合并，应单独设计交互、冲突规则、事务和测试。
 
@@ -131,7 +130,7 @@ sdk.dir=/home/用户名/Android/Sdk
 ./gradlew --no-daemon connectedDebugAndroidTest
 ```
 
-仪器测试需要设备或模拟器；当前仓库只有 `app/src/test/` 下的单元测试，尚无 `app/src/androidTest/` 测试用例。重要逻辑修复应补充回归测试，不能只依赖人工验证。
+仪器测试需要设备或模拟器；`app/src/androidTest/` 覆盖无备注字段的全新安装、数据库 3 → 4 升级后的数据、约束和自增序列。`app/src/test/` 下的单元测试覆盖日期、统计及备份校验，包括旧备注丢弃和版本 4 备份往返。重要逻辑修复应补充回归测试，不能只依赖人工验证。
 
 修改应用时，如果本地没有 Android SDK，可按[贡献流程](../CONTRIBUTING.md#pull-requests)推送分支并创建 PR，等待 [Android Build](../.github/workflows/android-build.yaml) 完成，再下载 `app-debug-apk` artifact 进行真机验证。触发条件和变更分类见下文的 [CI 与文档检查](#ci-documentation)。
 
@@ -146,6 +145,7 @@ CI 通过不能替代真机验证，尤其是数据库迁移、权限、主题�
 - PR 检查从共同祖先到 PR 最新提交的完整差异；`main` 推送检查推送前后提交的完整差异，使用相同的文件分类规则。
 - 只有 `.md`、`.markdown` 或 `docs/` 下文件变化时，只执行文档检查，跳过 APK 构建、应用单元测试和 artifact 上传。`app/`、`gradle/`、`.github/`、`scripts/` 下的变更始终执行完整构建；其他不在文档范围内的文件（包括构建和依赖配置）也执行完整构建。
 - 混合变更、空差异或无法确认变更范围时执行完整构建。手动触发始终执行完整构建。
+- 完整构建同时编译应用与仪器测试 APK，并运行单元测试；仪器测试的实际执行仍需设备或模拟器上的 `connectedDebugAndroidTest`。
 - 每次运行都检查差异的空白格式，以及仓库 Markdown 中的本地文件链接和章节锚点；外部网址不做联网检查。
 
 纯文档修改无需构建 APK，本地执行：

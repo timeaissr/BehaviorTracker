@@ -1,11 +1,15 @@
 package com.github.timeaissr.behaviortracker.export;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.github.timeaissr.behaviortracker.data.entity.Behavior;
 import com.github.timeaissr.behaviortracker.data.entity.Record;
 import com.github.timeaissr.behaviortracker.data.entity.RecordType;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.junit.Test;
@@ -41,14 +45,14 @@ public class BackupValidatorTest {
     @Test
     public void rejectsUnsupportedBackupVersion() {
         ExportData data = validBackup();
-        data.setVersion(4);
+        data.setVersion(5);
 
         assertFalse(BackupValidator.isValid(data));
     }
 
     @Test
     public void requiresDetailedTimeInCurrentBackup() {
-        String json = "{\"version\":3,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
+        String json = "{\"version\":4,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
                 + "\"recordType\":\"BOOLEAN\",\"createdAt\":0,\"archived\":false}],"
                 + "\"records\":[]}";
 
@@ -58,7 +62,7 @@ public class BackupValidatorTest {
 
     @Test
     public void acceptsDetailedTimeInCurrentBackup() {
-        String json = "{\"version\":3,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
+        String json = "{\"version\":4,\"behaviors\":[{\"id\":1,\"name\":\"运动\","
                 + "\"recordType\":\"BOOLEAN\",\"detailedTime\":false,"
                 + "\"createdAt\":0,\"archived\":false}],\"records\":[]}";
 
@@ -160,6 +164,43 @@ public class BackupValidatorTest {
         data.getBehaviors().get(0).setCreatedAt(0);
 
         assertTrue(BackupValidator.isValid(data));
+    }
+
+    @Test
+    public void legacyBackupNotesAreDiscardedWithoutChangingRecords() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        for (int version = 1; version <= 3; version++) {
+            JsonObject json = gson.toJsonTree(validBackup()).getAsJsonObject();
+            json.addProperty("version", version);
+            JsonObject originalRecord = json.getAsJsonArray("records").get(0).getAsJsonObject();
+            originalRecord.addProperty("note", "旧备注");
+
+            assertTrue(BackupValidator.hasRequiredJsonFields(json));
+            ExportData imported = gson.fromJson(json, ExportData.class);
+            assertTrue(BackupValidator.isValid(imported));
+            Record record = imported.getRecords().get(0);
+            assertEquals(originalRecord.get("id").getAsLong(), record.getId());
+            assertEquals(originalRecord.get("behaviorId").getAsLong(), record.getBehaviorId());
+            assertEquals(originalRecord.get("timestamp").getAsLong(), record.getTimestamp());
+            assertEquals(originalRecord.get("value").getAsDouble(), record.getValue(), 0.0);
+            assertFalse(gson.toJsonTree(record).getAsJsonObject().has("note"));
+        }
+    }
+
+    @Test
+    public void currentBackupRoundTripUsesVersionFourWithoutNotes() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonObject json = gson.toJsonTree(validBackup()).getAsJsonObject();
+
+        assertEquals(4, json.get("version").getAsInt());
+        assertTrue(BackupValidator.hasRequiredJsonFields(json));
+        JsonObject record = json.getAsJsonArray("records").get(0).getAsJsonObject();
+        assertEquals(4, record.size());
+        assertFalse(record.has("note"));
+        ExportData restored = gson.fromJson(json, ExportData.class);
+        assertTrue(BackupValidator.isValid(restored));
+        assertFalse(restored.getBehaviors().get(0).isDetailedTime());
+        assertEquals(250.0, restored.getRecords().get(0).getValue(), 0.0);
     }
 
     private static ExportData validBackup() {

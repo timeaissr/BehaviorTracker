@@ -102,7 +102,7 @@ public class DetailViewModel extends AndroidViewModel {
         repository.insertRecord(record, callback);
     }
 
-    public void insertNumericRecord(long behaviorId, double value, String note, long timestamp,
+    public void insertNumericRecord(long behaviorId, double value, long timestamp,
                                     BehaviorRepository.OnOperationCallback callback) {
         if (!Double.isFinite(value)) {
             if (callback != null) {
@@ -113,7 +113,6 @@ public class DetailViewModel extends AndroidViewModel {
         Record record = new Record();
         record.setBehaviorId(behaviorId);
         record.setValue(value);
-        record.setNote(note);
         record.setTimestamp(timestamp);
         repository.insertRecord(record, callback);
     }

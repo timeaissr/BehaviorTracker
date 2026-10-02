@@ -66,26 +66,17 @@ public class RecordAdapter extends ListAdapter<Record, RecordAdapter.ViewHolder>
     class ViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView textDate;
-        private final TextView textNote;
         private final TextView textValue;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             textDate = itemView.findViewById(R.id.text_record_date);
-            textNote = itemView.findViewById(R.id.text_record_note);
             textValue = itemView.findViewById(R.id.text_record_value);
         }
 
         void bind(Record record) {
             textDate.setText(detailedTime ? DateUtils.formatDateTime(record.getTimestamp())
                     : DateUtils.formatDate(record.getTimestamp()));
-
-            if (record.getNote() != null && !record.getNote().isEmpty()) {
-                textNote.setVisibility(View.VISIBLE);
-                textNote.setText(record.getNote());
-            } else {
-                textNote.setVisibility(View.GONE);
-            }
 
             if (recordType == RecordType.BOOLEAN) {
                 textValue.setText("✓");

@@ -36,9 +36,6 @@ public class Record {
     /** Numeric value. For boolean type, this is always 1.0. */
     private double value;
 
-    /** Optional note/comment for this record. */
-    private String note;
-
     public Record() {
         this.timestamp = System.currentTimeMillis();
         this.value = 1.0;
@@ -78,11 +75,4 @@ public class Record {
         this.value = value;
     }
 
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
 }

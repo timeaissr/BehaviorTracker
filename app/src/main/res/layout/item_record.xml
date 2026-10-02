@@ -9,29 +9,13 @@
     android:paddingHorizontal="16dp"
     android:paddingVertical="12dp">
 
-    <LinearLayout
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_record_date"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/text_record_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurface" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/text_record_note"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone" />
-
-    </LinearLayout>
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurface" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_record_value"

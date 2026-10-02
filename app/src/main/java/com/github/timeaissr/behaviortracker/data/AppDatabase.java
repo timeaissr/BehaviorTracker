@@ -23,7 +23,7 @@ import com.github.timeaissr.behaviortracker.data.entity.Record;
 
 @Database(
     entities = {Behavior.class, Record.class},
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters.class)
@@ -48,7 +48,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             AppDatabase.class,
                             "behavior_tracker.db"
                     ).addMigrations(createMigration1To2(context.getApplicationContext()),
-                            MIGRATION_2_3).build();
+                            MIGRATION_2_3, MIGRATION_3_4).build();
                 }
             }
         }
@@ -59,6 +59,28 @@ public abstract class AppDatabase extends RoomDatabase {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE behaviors ADD COLUMN detailedTime INTEGER NOT NULL DEFAULT 1");
+        }
+    };
+
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            // Rebuild the table so removing notes also works on older SQLite versions.
+            database.execSQL("CREATE TABLE records_without_notes ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                    + "behaviorId INTEGER NOT NULL, timestamp INTEGER NOT NULL, "
+                    + "value REAL NOT NULL, FOREIGN KEY(behaviorId) REFERENCES behaviors(id) "
+                    + "ON UPDATE NO ACTION ON DELETE CASCADE)");
+            database.execSQL("INSERT INTO records_without_notes (id, behaviorId, timestamp, value) "
+                    + "SELECT id, behaviorId, timestamp, value FROM records");
+            // Keep the ID sequence even if records with the largest IDs were deleted.
+            database.execSQL("UPDATE sqlite_sequence SET seq = MAX(seq, "
+                    + "COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'records'), 0)) "
+                    + "WHERE name = 'records_without_notes'");
+            database.execSQL("DROP TABLE records");
+            database.execSQL("ALTER TABLE records_without_notes RENAME TO records");
+            database.execSQL("CREATE INDEX index_records_behaviorId ON records (behaviorId)");
+            database.execSQL("CREATE INDEX index_records_timestamp ON records (timestamp)");
         }
     };
 
