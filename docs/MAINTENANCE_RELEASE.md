@@ -84,6 +84,14 @@ rg 'versionCode|versionName' app/build.gradle
 
 `git status --short` 应无输出。
 
+版本更新 PR 合并且 `main` 的 Actions 通过后，可手动生成正式签名的候选 APK：
+
+```bash
+gh workflow run release.yaml --ref main
+```
+
+手动运行使用源码版本号，只构建并上传 `signed-apk-vX.Y.Z-<提交 SHA>` artifact，不创建标签或 GitHub Release。artifact 包含正式签名 APK、`SHA256SUMS.txt` 和签名验证结果 `SIGNATURE.txt`；下载后与上一正式 APK 比对证书，并在真机完成覆盖升级测试。只有推送版本标签才执行正式发布。
+
 ### 2. 创建标签
 
 以下命令中的 `X.Y.Z` 必须替换为计划发布的版本。先创建并核对带说明的标签，确认其指向计划发布的 `main` 提交：
@@ -104,7 +112,7 @@ git push origin vX.Y.Z
 
 ### 3. 检查工作流与发行说明
 
-工作流检出标签、准备构建环境、校验标签与源码版本、还原签名材料、构建并重命名 APK，最后创建 GitHub Release 并上传产物。
+工作流检出标签、准备构建环境、校验标签与源码版本、还原签名材料、构建并重命名 APK，验证签名并生成 SHA-256 校验文件，最后创建 GitHub Release 并上传产物。
 
 当前工作流生成的标题为 `Release vX.Y.Z`。完成后核对标签和文件名，将标题调整为[版本管理](#versioning)中的统一格式，并将通用正文替换为面向用户的发行说明，包含：
 
@@ -178,6 +186,6 @@ git branch -D <分支名>
 | 动态颜色切换会重载整个界面 | 评估局部更新和界面状态保留 |
 | Release 标题需手动统一，正文需手动完善 | 改善标题和发行说明生成流程 |
 | 曾出现第三方 Action 的 Node.js 运行时升级提示 | 下次维护时核对 Actions 日志，单独升级验证 |
-| 工作流尚未自动校验 APK 签名和对比上一版本证书 | 将发布产物验证步骤纳入自动化 |
+| 工作流尚未自动对比上一版本签名证书 | 在现有签名有效性校验基础上，增加跨版本证书比对 |
 
 处理上述事项时分别建立明确的 Issue 或 PR，完成后更新此表。
