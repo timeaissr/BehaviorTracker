@@ -65,6 +65,8 @@ git switch main
 git pull --ff-only origin main
 ```
 
+不随版本发布的改动（文档、CI、维护）在这里按[分支清理](MAINTENANCE_RELEASE.md#branch-cleanup)删除分支；随版本发布的改动等发布并验证后再清理。
+
 ## 发布（维护者）
 
 前置条件：发布 PR 已合并，`main` 的版本号就是要发的版本，发行说明已在 `.github/release-notes/` 里。
