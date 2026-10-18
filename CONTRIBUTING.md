@@ -37,13 +37,18 @@ git switch -c <分支名>
 | `ci/` | 持续集成与发布工作流 |
 | `codex/` | Codex 创建的工作分支 |
 
+分支名格式为 `<类型>/<短描述>`：
+
+- 短描述用英文小写、连字符分词，2~4 个词，说明这一支要做什么，如 `feat/import-preview`、`refactor/stats-calculator`。
+- 有对应 Issue 时把编号放在描述前：`fix/12-import-crash`。
+
 ## 提交要求
 
-提交信息使用 `<类型>: <中文说明>`，常用类型为 `feat`、`fix`、`docs`、`refactor`、`test`、`chore`、`ci`：
+提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)，描述部分用中文。常用类型为 `feat`、`fix`、`docs`、`refactor`、`test`、`chore`、`ci`；范围（括号）和 `BREAKING CHANGE:` 可选，不强制：
 
 ```text
 fix: 修复导入校验失败后数据被修改的问题
-feat: 增加备份导入预览
+feat(detail): 增加备份导入预览
 docs: 更新发布流程
 ```
 
@@ -81,7 +86,7 @@ PR 说明应包含修改内容、原因、验证方法及结果、数据库迁�
 - [ ] 需要的版本更新和对应文档已同步。
 - [ ] 本次不处理的问题已记录到 Issue、待办事项或[技术债](docs/MAINTENANCE_RELEASE.md#known-issues)。
 
-推荐使用 **Squash and merge**。合并标题概括用户可见结果，Extended description 总结主要变化，避免直接堆叠临时提交信息。
+推荐使用 **Squash and merge**。PR 标题会成为 `main` 上的提交标题，需遵循同一提交规范并概括用户可见结果；Extended description 总结主要变化，避免直接堆叠临时提交信息。
 
 合并后同步本地仓库，并确认 `main` 的 Actions 成功：
 
