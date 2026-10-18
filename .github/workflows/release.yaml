@@ -49,6 +49,12 @@ jobs:
             exit 1
           fi
 
+          NOTES=".github/release-notes/${{ steps.version.outputs.tag }}.md"
+          if [ ! -f "$NOTES" ]; then
+            echo "Missing release notes: $NOTES"
+            exit 1
+          fi
+
           echo "Building app version $APP_VERSION (versionCode $VERSION_CODE)"
 
       - name: Decode keystore
@@ -82,15 +88,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: Release ${{ steps.version.outputs.tag }}
-          body: |
-            ## Behavior Tracker ${{ steps.version.outputs.tag }}
-            
-            ### Changes
-            See [commit history](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }}) for details.
-            
-            ### Installation
-            Download the APK file below and install on your Android device.
+          name: ${{ steps.version.outputs.version }}
+          body_path: .github/release-notes/${{ steps.version.outputs.tag }}.md
           files: app/build/outputs/apk/release/*.apk
           draft: false
           prerelease: false
