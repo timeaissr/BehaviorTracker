@@ -131,7 +131,12 @@ apksigner verify --verbose --print-certs BehaviorTracker-vX.Y.Z.apk
 
 ## 分支清理
 
-仅在 PR 已合并、正式版本已发布且验证通过后删除功能分支。Squash merge 会生成新提交，Git 可能仍认为原分支未合并；先记录分支末端，确认其内容已进入 `main`：
+删除分支前先确认 PR 已合并、内容已进入 `main`，再按改动类型选择时机：
+
+- 随正式版本发布的改动：正式版本发布并验证通过后再删除。
+- 不随版本发布的改动（文档、CI、维护）：`main` 的 Actions 通过后即可删除，不必等到下一个正式版本。
+
+Squash merge 会生成新提交，Git 可能仍认为原分支未合并；先记录分支末端，确认其内容已进入 `main`：
 
 ```bash
 git branch --show-current
@@ -176,6 +181,7 @@ git branch -D <分支名>
 | 导入交互缺少覆盖前确认，也不支持合并 | 设计导入预览、确认及冲突处理，现有语义见[备份与导入](DEVELOPMENT.md#备份与导入) |
 | 动态颜色切换会重载整个界面 | 评估局部更新和界面状态保留 |
 | 曾出现第三方 Action 的 Node.js 运行时升级提示 | 下次维护时核对 Actions 日志，单独升级验证 |
+| `ubuntu-latest` 自 2026-10-19 起迁移到 Ubuntu 26 | 下次构建核对 JDK 21 与 Android SDK 的兼容性，异常时固定 runner 版本 |
 | 工作流尚未自动校验 APK 签名和对比上一版本证书 | 将发布产物验证步骤纳入自动化 |
 
 处理上述事项时分别建立明确的 Issue 或 PR，完成后更新此表。
