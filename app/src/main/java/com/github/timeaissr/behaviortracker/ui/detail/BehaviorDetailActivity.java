@@ -27,6 +27,7 @@ import com.github.timeaissr.behaviortracker.data.entity.Record;
 import com.github.timeaissr.behaviortracker.data.entity.RecordType;
 import com.github.timeaissr.behaviortracker.databinding.ActivityBehaviorDetailBinding;
 import com.github.timeaissr.behaviortracker.ui.add.AddBehaviorActivity;
+import com.github.timeaissr.behaviortracker.ui.record.RecordDateTimeInput;
 import com.github.timeaissr.behaviortracker.util.DateUtils;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -34,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 public class BehaviorDetailActivity extends AppCompatActivity {
 
@@ -121,15 +121,8 @@ public class BehaviorDetailActivity extends AppCompatActivity {
     private void showBooleanRecordDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_boolean_input, null);
         
-        com.google.android.material.button.MaterialButton btnPickDatetime = 
-                dialogView.findViewById(R.id.btn_pick_datetime);
-        final long[] selectedTimestamp = {currentBehavior.isDetailedTime()
-                ? System.currentTimeMillis() : DateUtils.getStartOfDay()};
-        
-        btnPickDatetime.setText(currentBehavior.isDetailedTime()
-                ? R.string.pick_date_time : R.string.pick_date);
-        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(
-                selectedTimestamp, btnPickDatetime, currentBehavior.isDetailedTime()));
+        RecordDateTimeInput dateTimeInput = new RecordDateTimeInput(
+                this, dialogView, currentBehavior.isDetailedTime());
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(currentBehavior.getName())
@@ -139,9 +132,10 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                 .create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 .setOnClickListener(v -> {
+                    if (!dateTimeInput.validate()) return;
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     viewModel.insertBooleanRecord(
-                        behaviorId, selectedTimestamp[0], success -> runOnUiThread(() -> {
+                        behaviorId, dateTimeInput.getTimestamp(), success -> runOnUiThread(() -> {
                             if (!canHandleAsyncResult()) return;
                             com.google.android.material.snackbar.Snackbar.make(binding.getRoot(),
                                     success
@@ -163,17 +157,10 @@ public class BehaviorDetailActivity extends AppCompatActivity {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_numeric_input, null);
         
         android.widget.EditText editValue = dialogView.findViewById(R.id.edit_value);
-        com.google.android.material.button.MaterialButton btnPickDatetime = 
-                dialogView.findViewById(R.id.btn_pick_datetime);
 
         String unit = currentBehavior.getUnit() != null ? " (" + currentBehavior.getUnit() + ")" : "";
-        final long[] selectedTimestamp = {currentBehavior.isDetailedTime()
-                ? System.currentTimeMillis() : DateUtils.getStartOfDay()};
-        
-        btnPickDatetime.setText(currentBehavior.isDetailedTime()
-                ? R.string.pick_date_time : R.string.pick_date);
-        btnPickDatetime.setOnClickListener(v -> showDateTimePicker(
-                selectedTimestamp, btnPickDatetime, currentBehavior.isDetailedTime()));
+        RecordDateTimeInput dateTimeInput = new RecordDateTimeInput(
+                this, dialogView, currentBehavior.isDetailedTime());
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(currentBehavior.getName() + unit)
@@ -195,9 +182,10 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                         editValue.setError(getString(R.string.error_invalid_value));
                         return;
                     }
+                    if (!dateTimeInput.validate()) return;
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     viewModel.insertNumericRecord(behaviorId, value,
-                            selectedTimestamp[0], success ->
+                            dateTimeInput.getTimestamp(), success ->
                                     runOnUiThread(() -> {
                                         if (!canHandleAsyncResult()) return;
                                         com.google.android.material.snackbar.Snackbar.make(
@@ -217,69 +205,6 @@ public class BehaviorDetailActivity extends AppCompatActivity {
                                     }));
                 }));
         dialog.show();
-    }
-
-    private void showDateTimePicker(final long[] timestampHolder, 
-            com.google.android.material.button.MaterialButton button,
-            boolean detailedTime) {
-        // Show date picker first
-        com.google.android.material.datepicker.MaterialDatePicker<Long> datePicker = 
-                com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
-                .setTitleText("选择日期")
-                .setSelection(DateUtils.toDatePickerSelection(timestampHolder[0]))
-                .build();
-
-        datePicker.addOnPositiveButtonClickListener(selection -> {
-            if (!detailedTime) {
-                java.util.Calendar selectedDateUtc = java.util.Calendar.getInstance(
-                        TimeZone.getTimeZone("UTC"));
-                selectedDateUtc.setTimeInMillis(selection);
-                java.util.Calendar localDate = java.util.Calendar.getInstance();
-                localDate.clear();
-                localDate.set(selectedDateUtc.get(java.util.Calendar.YEAR),
-                        selectedDateUtc.get(java.util.Calendar.MONTH),
-                        selectedDateUtc.get(java.util.Calendar.DAY_OF_MONTH));
-                timestampHolder[0] = localDate.getTimeInMillis();
-                button.setText(DateUtils.formatDate(timestampHolder[0]));
-                return;
-            }
-            // After date is selected, show time picker
-            java.util.Calendar selectedDateUtc = java.util.Calendar.getInstance(
-                    TimeZone.getTimeZone("UTC"));
-            selectedDateUtc.setTimeInMillis(selection);
-            java.util.Calendar calendar = java.util.Calendar.getInstance();
-            calendar.setTimeInMillis(timestampHolder[0]);
-            calendar.set(java.util.Calendar.YEAR, selectedDateUtc.get(java.util.Calendar.YEAR));
-            calendar.set(java.util.Calendar.MONTH, selectedDateUtc.get(java.util.Calendar.MONTH));
-            calendar.set(java.util.Calendar.DAY_OF_MONTH,
-                    selectedDateUtc.get(java.util.Calendar.DAY_OF_MONTH));
-            
-            com.google.android.material.timepicker.MaterialTimePicker timePicker = 
-                    new com.google.android.material.timepicker.MaterialTimePicker.Builder()
-                    .setTimeFormat(com.google.android.material.timepicker.TimeFormat.CLOCK_24H)
-                    .setHour(calendar.get(java.util.Calendar.HOUR_OF_DAY))
-                    .setMinute(calendar.get(java.util.Calendar.MINUTE))
-                    .setTitleText("选择时间")
-                    .build();
-
-            timePicker.addOnPositiveButtonClickListener(v -> {
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, timePicker.getHour());
-                calendar.set(java.util.Calendar.MINUTE, timePicker.getMinute());
-                calendar.set(java.util.Calendar.SECOND, 0);
-                calendar.set(java.util.Calendar.MILLISECOND, 0);
-                
-                timestampHolder[0] = calendar.getTimeInMillis();
-                
-                // Update button text
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", 
-                        java.util.Locale.getDefault());
-                button.setText(sdf.format(new java.util.Date(timestampHolder[0])));
-            });
-
-            timePicker.show(getSupportFragmentManager(), "time_picker");
-        });
-
-        datePicker.show(getSupportFragmentManager(), "date_picker");
     }
 
     private void observeBehavior() {

@@ -23,7 +23,6 @@
     <string name="record_detailed_time">记录详细时间（小时和分钟）</string>
     <string name="record_numeric_value">记录数值</string>
     <string name="pick_date">选择日期</string>
-    <string name="pick_date_time">选择日期和时间</string>
     <string name="unit_label">单位</string>
     <string name="unit_hint">例如：ml、km、分钟</string>
     <string name="choose_color">选择颜色</string>
@@ -34,6 +33,20 @@
 
     <!-- Record Input -->
     <string name="record_date">记录日期</string>
+    <string name="record_date_edit">%1$s · 点击修改</string>
+    <string name="record_time">记录时间（24 小时制）</string>
+    <string name="record_hour">小时</string>
+    <string name="record_minute">分钟</string>
+    <string name="time_separator" translatable="false">:</string>
+    <string name="time_minus" translatable="false">−</string>
+    <string name="time_plus" translatable="false">+</string>
+    <string name="decrease_hour">减少 1 小时</string>
+    <string name="increase_hour">增加 1 小时</string>
+    <string name="decrease_minute">减少 1 分钟</string>
+    <string name="increase_minute">增加 1 分钟</string>
+    <string name="time_input_hint">点击时间可清空重填，留空则保留原值</string>
+    <string name="error_invalid_hour">请输入 0–23</string>
+    <string name="error_invalid_minute">请输入 0–59</string>
     <string name="input_value">输入数值</string>
     <string name="confirm">确认</string>
 

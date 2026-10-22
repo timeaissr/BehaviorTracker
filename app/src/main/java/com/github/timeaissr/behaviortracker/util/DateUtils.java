@@ -2,6 +2,7 @@ package com.github.timeaissr.behaviortracker.util;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -76,6 +77,28 @@ public final class DateUtils {
     /** Convert a local calendar date to the UTC-midnight value expected by MaterialDatePicker. */
     public static long toDatePickerSelection(long timestamp) {
         return toLocalDate(timestamp).atStartOfDay(ZoneOffset.UTC)
+                .toInstant().toEpochMilli();
+    }
+
+    /** Apply the picker's UTC calendar date in the local zone, preserving the selected time. */
+    public static long withDatePickerSelection(long timestamp, long selection, boolean detailedTime) {
+        LocalDate date = Instant.ofEpochMilli(selection).atZone(ZoneOffset.UTC).toLocalDate();
+        if (!detailedTime) {
+            return date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        }
+        return toZonedDateTime(timestamp).with(date).withSecond(0).withNano(0)
+                .toInstant().toEpochMilli();
+    }
+
+    /** Set a validated 24-hour time, resolving daylight-saving gaps in the local zone. */
+    public static long withTime(long timestamp, int hour, int minute) {
+        return toZonedDateTime(timestamp).with(LocalTime.of(hour, minute))
+                .toInstant().toEpochMilli();
+    }
+
+    /** Move by elapsed minutes, carrying into the date across midnight and DST transitions. */
+    public static long addMinutes(long timestamp, int minutes) {
+        return toZonedDateTime(timestamp).withSecond(0).withNano(0).plusMinutes(minutes)
                 .toInstant().toEpochMilli();
     }
 
