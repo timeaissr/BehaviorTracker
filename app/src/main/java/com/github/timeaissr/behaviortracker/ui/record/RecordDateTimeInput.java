@@ -29,6 +29,8 @@ public final class RecordDateTimeInput {
     private final EditText minuteInput;
     private final TextInputLayout hourLayout;
     private final TextInputLayout minuteLayout;
+    private String hourBeforeEdit;
+    private String minuteBeforeEdit;
     private long timestamp;
 
     public RecordDateTimeInput(AppCompatActivity activity, View dialogView, boolean detailedTime) {
@@ -64,11 +66,16 @@ public final class RecordDateTimeInput {
     private void prepareInput(EditText input, TextInputLayout layout, boolean hour) {
         input.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
+                if (hour) {
+                    hourBeforeEdit = input.getText().toString();
+                } else {
+                    minuteBeforeEdit = input.getText().toString();
+                }
                 layout.setError(null);
                 input.setText("");
             } else if (input.getText().toString().trim().isEmpty()) {
                 // Tapping a field and leaving it empty keeps its previous value.
-                input.setText(formatNumber(currentPart(hour)));
+                input.setText(hour ? hourBeforeEdit : minuteBeforeEdit);
             }
         });
     }
@@ -94,8 +101,7 @@ public final class RecordDateTimeInput {
     private Integer readPart(EditText input, TextInputLayout layout, boolean hour) {
         String text = input.getText().toString().trim();
         if (text.isEmpty()) {
-            layout.setError(null);
-            return currentPart(hour);
+            text = hour ? hourBeforeEdit : minuteBeforeEdit;
         }
         try {
             int value = Integer.parseInt(text);
@@ -137,8 +143,10 @@ public final class RecordDateTimeInput {
 
     private void refresh() {
         dateButton.setText(activity.getString(R.string.record_date_edit, DateUtils.formatDate(timestamp)));
-        hourInput.setText(formatNumber(currentPart(true)));
-        minuteInput.setText(formatNumber(currentPart(false)));
+        hourBeforeEdit = formatNumber(currentPart(true));
+        minuteBeforeEdit = formatNumber(currentPart(false));
+        hourInput.setText(hourBeforeEdit);
+        minuteInput.setText(minuteBeforeEdit);
     }
 
     private String formatNumber(int value) {

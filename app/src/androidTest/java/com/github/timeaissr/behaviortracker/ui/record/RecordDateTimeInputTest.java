@@ -92,6 +92,18 @@ public class RecordDateTimeInputTest {
     }
 
     @Test
+    public void clearingAnEditedFieldRestoresItsMostRecentValue() {
+        showDialog(R.layout.dialog_boolean_input, true);
+        onView(withId(R.id.edit_hour)).perform(click(), typeText("7"));
+        onView(withId(R.id.edit_minute)).perform(click(), typeText("08"));
+        onView(withId(R.id.edit_hour)).perform(click()).check(matches(withText("")));
+        scenario.onActivity(activity -> {
+            assertTrue(input.validate());
+            assertEquals("07:08", DateUtils.formatTime(input.getTimestamp()));
+        });
+    }
+
+    @Test
     public void minuteButtonCommitsTypedTimeAndUpdatesDateAcrossMidnight() {
         showDialog(R.layout.dialog_boolean_input, true);
         scenario.onActivity(activity -> {
