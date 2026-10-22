@@ -34,6 +34,7 @@ sdk.dir=/home/用户名/Android/Sdk
 | `ui/main/` | 主页 Activity、ViewModel、行为列表适配器 |
 | `ui/add/` | 行为添加/编辑、颜色选择 |
 | `ui/detail/` | 行为详情、记录列表和统计 |
+| `ui/record/` | 首页与详情页共用的记录日期、时间输入组件 |
 | `ui/settings/` | 主题及导入导出设置 |
 | `export/` | DataManager 文件操作、ExportData 格式、BackupValidator 校验 |
 | `util/` | DateUtils 日期处理、StatsCalculator 统计计算 |
@@ -100,6 +101,8 @@ sdk.dir=/home/用户名/Android/Sdk
 - 聚合统计直接按记录计算，避免先生成巨大日期集合。
 - 新增日期工具时补充相应导入和单元测试。
 
+新增记录弹窗直接展示当前本地日期，开启详细时间时同时展示小时和分钟（24 小时制，保存时秒和毫秒归零）。日期按钮只修改日期；小时、分钟按钮分别增减 1 小时、1 分钟，跨午夜同步更新日期。时间输入框在获得焦点时清空，留空则恢复原值，小时接受 0～23、分钟接受 0～59，非法输入阻止保存和快捷调整。关闭详细时间时隐藏时间输入并保存本地日初。夏令时不存在的时间向后调整到有效时间，并更新显示值。
+
 ### 移除系统功能
 
 删除提醒、闹钟或通知功能时，同步清理数据库字段及迁移、已注册的 Alarm/Worker/Receiver/Service、权限、通知渠道、设置入口和相关文档；升级验证需确认不会重新创建旧通知渠道或后台任务。
@@ -130,7 +133,7 @@ sdk.dir=/home/用户名/Android/Sdk
 ./gradlew --no-daemon connectedDebugAndroidTest
 ```
 
-仪器测试需要设备或模拟器；`app/src/androidTest/` 覆盖无备注字段的全新安装、数据库 3 → 4 升级后的数据、约束和自增序列。`app/src/test/` 下的单元测试覆盖日期、统计及备份校验，包括旧备注丢弃和版本 4 备份往返。重要逻辑修复应补充回归测试，不能只依赖人工验证。
+仪器测试需要设备或模拟器；`app/src/androidTest/` 覆盖无备注字段的全新安装、数据库 3 → 4 升级后的数据、约束和自增序列，以及记录时间的初始显示、点击清空、手动输入、空值恢复、加减和范围校验。`app/src/test/` 下的单元测试覆盖日期、统计及备份校验，包括日期选择的时区转换、跨日加减、夏令时边界、旧备注丢弃和版本 4 备份往返。重要逻辑修复应补充回归测试，不能只依赖人工验证。
 
 修改应用时，如果本地没有 Android SDK，可按[贡献流程](../CONTRIBUTING.md#pull-requests)推送分支并创建 PR，等待 [Android Build](../.github/workflows/android-build.yaml) 完成，再下载 `app-debug-apk` artifact 进行真机验证。触发条件和变更分类见下文的 [CI 与文档检查](#ci-documentation)。
 
